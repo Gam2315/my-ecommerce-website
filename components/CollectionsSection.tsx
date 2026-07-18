@@ -43,19 +43,11 @@ export default function CollectionsSection() {
           {collections.map((col) => (
             <div
               key={col.id}
-              className="collection-card group relative aspect-[5/6] w-full"
+              id={col.id}
+              className="group flex flex-col items-center justify-center h-56 w-full bg-gray-50 border border-gray-100 rounded-xl cursor-pointer transition-all hover:bg-white hover:shadow-lg"
             >
-              <Image
-                src={col.image}
-                alt={col.alt}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              <div className="collection-overlay">
-                <h3>{col.title}</h3>
-                <p>{col.subtitle}</p>
-              </div>
+              <h3 className="text-2xl font-bold tracking-[4px] text-gray-900 group-hover:text-[#e6193c] transition-colors">{col.title}</h3>
+              <p className="text-xs text-gray-400 mt-2 tracking-[2px] uppercase">{col.subtitle}</p>
             </div>
           ))}
         </div>

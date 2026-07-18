@@ -24,10 +24,17 @@ function useCountdown(targetDate: Date) {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export default function HeroSection() {
-  // 4-day countdown from now
-  const target = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000);
+export default function HeroSection({ activeDiscount }: { activeDiscount?: any }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const [target] = useState(() => activeDiscount?.expiry_date ? new Date(activeDiscount.expiry_date) : new Date());
   const { days, hours, minutes, seconds } = useCountdown(target);
+
+  const hasValidTimer = activeDiscount?.expiry_date && target.getTime() > Date.now();
 
   return (
     <section
@@ -59,19 +66,21 @@ export default function HeroSection() {
           </p>
 
           {/* Countdown */}
-          <div className="mt-7 flex gap-3">
-            {[
-              { value: pad(days), label: "Days" },
-              { value: pad(hours), label: "Hours" },
-              { value: pad(minutes), label: "Minutes" },
-              { value: pad(seconds), label: "Seconds" },
-            ].map((item) => (
-              <div key={item.label} className="countdown-box">
-                <span className="number">{item.value}</span>
-                <span className="label">{item.label}</span>
-              </div>
-            ))}
-          </div>
+          {hasValidTimer && (
+            <div className="mt-7 flex gap-3">
+              {[
+                { value: isMounted ? pad(days) : "00", label: "Days" },
+                { value: isMounted ? pad(hours) : "00", label: "Hours" },
+                { value: isMounted ? pad(minutes) : "00", label: "Minutes" },
+                { value: isMounted ? pad(seconds) : "00", label: "Seconds" },
+              ].map((item) => (
+                <div key={item.label} className="countdown-box">
+                  <span className="number">{item.value}</span>
+                  <span className="label">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* CTA Buttons */}
           <div className="mt-8 flex flex-wrap gap-3">
@@ -82,12 +91,14 @@ export default function HeroSection() {
             >
               Explore Shop
             </a>
-            <a
-              href="#black-friday"
-              className="inline-flex items-center justify-center rounded-full border-2 border-black bg-black px-7 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white transition-all hover:bg-gray-900"
-            >
-              Black Friday Deals
-            </a>
+            {activeDiscount && (
+              <a
+                href="#black-friday"
+                className="inline-flex items-center justify-center rounded-full border-2 border-black bg-black px-7 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white transition-all hover:bg-gray-900"
+              >
+                {activeDiscount.name}
+              </a>
+            )}
           </div>
         </div>
 

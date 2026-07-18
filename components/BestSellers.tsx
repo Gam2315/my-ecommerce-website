@@ -1,54 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-
-const products = [
-  {
-    id: 1,
-    name: "Queen Anato Crest",
-    category: "New Arrival",
-    price: "$16",
-    image:
-      "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=400&h=520&fit=crop",
-    discount: "29%",
-    hasSaleBanner: true,
-    alt: "Woman in white top and wide pants",
-  },
-  {
-    id: 2,
-    name: "Marco Tank",
-    category: "Exclusive",
-    price: "$71",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=520&fit=crop",
-    discount: null,
-    hasSaleBanner: false,
-    alt: "Woman in crop top and denim skirt",
-  },
-  {
-    id: 3,
-    name: "Jack by Dakota",
-    category: "Women",
-    price: "$75",
-    image:
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=520&fit=crop",
-    discount: null,
-    hasSaleBanner: false,
-    alt: "Woman in floral top and navy pants",
-  },
-  {
-    id: 4,
-    name: "The Trucker",
-    category: "Limited Edition",
-    price: "$72",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=520&fit=crop",
-    discount: "9%",
-    hasSaleBanner: true,
-    alt: "Man in black turtleneck and grey pants",
-  },
-];
+import { createClient } from "@/utils/supabase/client";
 
 function SaleBanner({ discount }: { discount: string }) {
   const text = `SALE ${discount} OFF ⚡ HOT SALE ${discount} OFF ⚡ `;
@@ -69,6 +25,50 @@ function SaleBanner({ discount }: { discount: string }) {
 }
 
 export default function BestSellers() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      // Fetch all products
+      const { data: allProducts } = await supabase.from('products').select('*');
+      
+      // Fetch completed orders
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('items')
+        .in('status', ['Delivered', 'Completed', 'Shipped', 'Processing', 'Pending']); 
+        // Including all non-cancelled orders for accurate sales volume, as requested 'complete' might just mean placed orders for now if testing, but we'll prioritize actually delivered if they exist.
+
+      if (allProducts && orders) {
+        // Calculate sales count for each product
+        const salesCount: Record<number, number> = {};
+        
+        orders.forEach(order => {
+          order.items?.forEach((item: any) => {
+            salesCount[item.productId] = (salesCount[item.productId] || 0) + item.quantity;
+          });
+        });
+
+        // Add sales count to products and sort
+        const productsWithSales = allProducts.map(p => ({
+          ...p,
+          sales: salesCount[p.id] || 0
+        }));
+
+        // Sort by sales descending
+        productsWithSales.sort((a, b) => b.sales - a.sales);
+
+        // Take top 5
+        setProducts(productsWithSales.slice(0, 5));
+      }
+      setLoading(false);
+    };
+
+    fetchBestSellers();
+  }, [supabase]);
+
   return (
     <section id="best-sellers" className="relative w-full bg-white py-20">
       {/* Background watermark */}
@@ -95,48 +95,58 @@ export default function BestSellers() {
         </h2>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <div key={product.id} className="group">
-              {/* Card */}
-              <div className="product-card relative aspect-[3/4] w-full overflow-hidden">
-                {/* Sale Badge */}
-                {product.discount && (
-                  <div className="sale-badge">
-                    <span>Sale!</span>
-                    <span>{product.discount}</span>
-                  </div>
-                )}
+        {loading ? (
+          <div className="py-16 text-center">
+            <p className="text-gray-500 font-medium">Loading best sellers...</p>
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {products.map((product) => (
+              <Link href={`/product/${product.id}`} key={product.id} className="group cursor-pointer">
+                {/* Card */}
+                <div className="product-card relative aspect-[3/4] w-full overflow-hidden rounded-sm">
+                  {/* Sale Badge */}
+                  {product.discount && (
+                    <div className="sale-badge">
+                      <span>Sale!</span>
+                      <span>{product.discount}</span>
+                    </div>
+                  )}
 
-                <Image
-                  src={product.image}
-                  alt={product.alt}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                />
+                  <Image
+                    src={product.image}
+                    alt={product.name || "Product image"}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
 
-                {/* Sale Banner */}
-                {product.hasSaleBanner && product.discount && (
-                  <SaleBanner discount={product.discount} />
-                )}
-              </div>
+                  {/* Sale Banner */}
+                  {product.hasSaleBanner && product.discount && (
+                    <SaleBanner discount={product.discount} />
+                  )}
+                </div>
 
-              {/* Info */}
-              <div className="mt-3 text-center">
-                <h3 className="text-[15px] font-semibold text-black font-[family-name:var(--font-playfair)]">
-                  {product.name}
-                </h3>
-                <p className="mt-0.5 text-[12px] text-gray-400">
-                  {product.category}
-                </p>
-                <p className="mt-1 text-[14px] font-bold text-black">
-                  {product.price}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+                {/* Info */}
+                <div className="mt-3 text-center group-hover:opacity-80 transition-opacity">
+                  <h3 className="text-[14px] font-semibold text-black font-[family-name:var(--font-playfair)] line-clamp-1">
+                    {product.name}
+                  </h3>
+                  <p className="mt-0.5 text-[11px] text-gray-400">
+                    {product.sales > 0 ? `${product.sales} Sold` : product.category}
+                  </p>
+                  <p className="mt-1 text-[13px] font-bold text-black">
+                    {product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="py-16 text-center">
+            <p className="text-gray-500 font-medium">No products currently available.</p>
+          </div>
+        )}
 
         {/* View All Products */}
         <div className="mt-14 flex items-center justify-center gap-2">

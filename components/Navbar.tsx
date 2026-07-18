@@ -6,14 +6,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { useCart } from "@/context/CartContext";
+import CartSidebar from "./CartSidebar";
 
 const navLinks = [
-  { label: "HOME", href: "#", active: true },
-  { label: "CATEGORIES", href: "#categories" },
-  { label: "WOMEN", href: "#women" },
-  { label: "MEN", href: "#men" },
-  { label: "KIDS", href: "#kids" },
-  { label: "PAGES", href: "#pages" },
+  { label: "HOME", href: "/", active: true },
+  { label: "WOMEN", href: "/category/women" },
+  { label: "MEN", href: "/category/men" },
+  { label: "KIDS", href: "/category/kids" },
+  { label: "SHOES", href: "/category/shoes" },
+  { label: "ACCESSORIES", href: "/category/accessories" },
+  { label: "PERFUMES", href: "/category/perfumes" },
 ];
 
 export default function Navbar() {
@@ -21,6 +24,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { itemCount, setIsCartOpen, isCartOpen } = useCart();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,9 +37,9 @@ export default function Navbar() {
         });
       }
     };
-    
+
     fetchUser();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
@@ -61,11 +65,12 @@ export default function Navbar() {
   };
 
   return (
-    <header
-      id="navbar"
-      className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-sm"
-      style={{ borderBottom: "1px solid #f5f5f5" }}
-    >
+    <>
+      <header
+        id="navbar"
+        className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-sm"
+        style={{ borderBottom: "1px solid #f5f5f5" }}
+      >
       <div className="mx-auto flex h-16 max-w-[1340px] items-center justify-between px-5 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 select-none">
@@ -118,15 +123,23 @@ export default function Navbar() {
               <span className="text-[13px] font-medium text-[#333]">
                 {user.given_name}
               </span>
-              
+
               <div className="absolute top-full right-0 pt-4 hidden group-hover:block">
-                <button 
-                  onClick={handleLogout}
-                  className="bg-white border border-gray-100 shadow-md py-2 px-4 flex items-center gap-2 text-sm text-[#333] hover:text-[#e6193c] transition-colors rounded-md whitespace-nowrap"
-                >
-                  <LogOut size={14} />
-                  Sign Out
-                </button>
+                <div className="bg-white border border-gray-100 shadow-md rounded-md overflow-hidden flex flex-col w-32">
+                  <Link
+                    href="/account"
+                    className="py-2.5 px-4 text-sm text-[#333] hover:bg-gray-50 hover:text-[#e6193c] transition-colors whitespace-nowrap border-b border-gray-50"
+                  >
+                    My Account
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="py-2.5 px-4 flex items-center gap-2 text-sm text-[#333] hover:bg-gray-50 hover:text-[#e6193c] transition-colors whitespace-nowrap text-left"
+                  >
+                    <LogOut size={14} />
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -141,18 +154,21 @@ export default function Navbar() {
           )}
 
           <button
+            onClick={() => setIsCartOpen(!isCartOpen)}
             className="relative flex items-center gap-1.5 text-[13px] font-medium text-[#333] transition-colors hover:text-[#e6193c]"
             aria-label="Cart"
           >
             <ShoppingBag size={18} strokeWidth={1.8} />
             <span className="hidden md:inline">Cart</span>
             {/* Badge */}
-            <span
-              className="absolute -right-2.5 -top-1.5 flex h-[16px] w-[16px] items-center justify-center rounded-full text-[9px] font-bold text-white"
-              style={{ background: "#e6193c" }}
-            >
-              0
-            </span>
+            {itemCount > 0 && (
+              <span
+                className="absolute -right-2.5 -top-1.5 flex h-[16px] w-[16px] items-center justify-center rounded-full text-[9px] font-bold text-white"
+                style={{ background: "#e6193c" }}
+              >
+                {itemCount}
+              </span>
+            )}
           </button>
 
           <button
@@ -187,16 +203,25 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          
+
           {user ? (
-            <button 
-              onClick={handleLogout}
-              className="py-2 text-[14px] font-semibold tracking-wide text-gray-500 text-left mt-2 border-t border-gray-50"
-            >
-              SIGN OUT
-            </button>
+            <div className="flex flex-col border-t border-gray-50 mt-2">
+              <Link
+                href="/account"
+                onClick={() => setMobileOpen(false)}
+                className="py-2 text-[14px] font-semibold tracking-wide text-gray-500 text-left"
+              >
+                MY ACCOUNT
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="py-2 text-[14px] font-semibold tracking-wide text-gray-500 text-left border-t border-gray-50"
+              >
+                SIGN OUT
+              </button>
+            </div>
           ) : (
-            <Link 
+            <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
               className="py-2 text-[14px] font-semibold tracking-wide text-gray-500 text-left mt-2 border-t border-gray-50 block"
@@ -206,6 +231,9 @@ export default function Navbar() {
           )}
         </nav>
       )}
-    </header>
+      </header>
+      <CartSidebar />
+    </>
   );
 }
+
