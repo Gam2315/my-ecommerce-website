@@ -6,7 +6,7 @@ export default function BrandsSection() {
       id: 1,
       name: "International Mega Standard",
       logo: (
-        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333]">
+        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333] dark:text-gray-400">
           <rect x="10" y="10" width="140" height="30" rx="15" stroke="currentColor" strokeWidth="2.5"/>
           <ellipse cx="80" cy="25" rx="60" ry="15" stroke="currentColor" strokeWidth="2"/>
           <line x1="80" y1="10" x2="80" y2="40" stroke="currentColor" strokeWidth="2"/>
@@ -23,7 +23,7 @@ export default function BrandsSection() {
       id: 2,
       name: "Logoipsum 1",
       logo: (
-        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 text-[#333]">
+        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 text-[#333] dark:text-gray-400">
           <path d="M40 15H25V35H40C45.5 35 50 30.5 50 25C50 19.5 45.5 15 40 15Z" stroke="currentColor" strokeWidth="4"/>
           <circle cx="35" cy="25" r="4" fill="currentColor"/>
           <text x="55" y="32" fontSize="20" fontWeight="bold" fill="currentColor" fontFamily="sans-serif">logoipsum</text>
@@ -34,7 +34,7 @@ export default function BrandsSection() {
       id: 3,
       name: "Logoipsum 2",
       logo: (
-        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333]">
+        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333] dark:text-gray-400">
           <circle cx="30" cy="25" r="14" stroke="currentColor" strokeWidth="2"/>
           <ellipse cx="30" cy="25" rx="6" ry="14" stroke="currentColor" strokeWidth="2"/>
           <line x1="16" y1="25" x2="44" y2="25" stroke="currentColor" strokeWidth="2"/>
@@ -48,7 +48,7 @@ export default function BrandsSection() {
       id: 4,
       name: "N Logo",
       logo: (
-        <svg viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333]">
+        <svg viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 text-[#333] dark:text-gray-400">
           <path d="M25 10L50 40H70V10H55V30L30 5H10V40H25V10Z" fill="currentColor"/>
         </svg>
       ),
@@ -57,7 +57,7 @@ export default function BrandsSection() {
       id: 5,
       name: "Logoipsum 3",
       logo: (
-        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 text-[#888]">
+        <svg viewBox="0 0 160 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 text-[#888] dark:text-[#666]">
           <text x="80" y="35" fontSize="24" fontWeight="900" textAnchor="middle" fill="none" stroke="currentColor" strokeWidth="1" letterSpacing="2">LOGOIPSUM</text>
         </svg>
       ),
@@ -65,13 +65,13 @@ export default function BrandsSection() {
   ];
 
   return (
-    <section className="py-12 bg-white pb-24">
+    <section className="py-12 bg-white dark:bg-[#0a0a0a] pb-24 transition-colors">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-wrap justify-center gap-6 md:gap-0 md:justify-between items-center">
           {brands.map((brand) => (
             <div 
               key={brand.id} 
-              className="flex items-center justify-center border border-gray-100 hover:border-gray-200 transition-colors w-full sm:w-[45%] md:w-[18%] h-24"
+              className="flex items-center justify-center border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 transition-colors w-full sm:w-[45%] md:w-[18%] h-24"
             >
               {brand.logo}
             </div>

@@ -46,11 +46,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex font-[family-name:var(--font-inter)] bg-white relative">
+    <div className="min-h-screen flex font-[family-name:var(--font-inter)] bg-white dark:bg-[#0a0a0a] transition-colors relative">
       {/* Back to Home Button */}
       <Link 
         href="/" 
-        className="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 text-gray-800 lg:text-white lg:bg-white/10 lg:hover:bg-white/20 transition-colors"
+        className="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-gray-800 dark:text-white lg:text-white lg:bg-white/10 lg:hover:bg-white/20 transition-colors"
         aria-label="Back to home"
       >
         <ArrowLeft size={20} />
@@ -83,11 +83,11 @@ export default function LoginPage() {
       </div>
 
       {/* Right Login Side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50/50 p-6 sm:p-12">
-        <div className="bg-white w-full max-w-md p-8 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-xl relative">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50/50 dark:bg-[#0a0a0a] p-6 sm:p-12 transition-colors">
+        <div className="bg-white dark:bg-[#111] w-full max-w-md p-8 shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-none border border-transparent dark:border-gray-800 rounded-xl relative transition-colors">
           
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900">Log In</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Log In</h2>
             <button className="flex items-center gap-2 text-sm text-[#e6193c] font-medium border border-[#e6193c] px-3 py-1.5 rounded bg-red-50/50 hover:bg-red-50 transition-colors">
               Log in with QR
               <QrCode size={16} />
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address" 
-                className="w-full border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c] transition-colors"
+                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded p-3 text-sm focus:outline-none focus:border-[#e6193c] dark:focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c] transition-colors"
               />
             </div>
             
@@ -113,7 +113,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password" 
-                className="w-full border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c] transition-colors pr-10"
+                className="w-full bg-transparent border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded p-3 text-sm focus:outline-none focus:border-[#e6193c] dark:focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c] transition-colors pr-10"
               />
               <button 
                 type="button" 
@@ -139,13 +139,13 @@ export default function LoginPage() {
           </form>
 
           <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs text-gray-400 font-medium">OR</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 border border-gray-300 rounded py-2 hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
+            <button className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 rounded py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
@@ -155,7 +155,7 @@ export default function LoginPage() {
             <button 
               type="button"
               onClick={handleGoogleLogin}
-              className="flex items-center justify-center gap-2 border border-gray-300 rounded py-2 hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+              className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 rounded py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
@@ -167,11 +167,11 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="mt-8 text-center text-xs text-gray-500 leading-relaxed">
+          <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
             By logging in, you agree to XtraFashion's <a href="#" className="text-[#e6193c] hover:underline">Terms of Service</a> & <a href="#" className="text-[#e6193c] hover:underline">Privacy Policy</a>
           </div>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
             New to XtraFashion? <Link href="/signup" className="text-[#e6193c] font-medium hover:underline">Sign Up</Link>
           </div>
         </div>

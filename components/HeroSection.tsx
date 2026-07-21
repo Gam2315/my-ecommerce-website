@@ -39,16 +39,16 @@ export default function HeroSection({ activeDiscount }: { activeDiscount?: any }
   return (
     <section
       id="hero"
-      className="relative flex min-h-[88vh] w-full items-center overflow-hidden bg-white"
+      className="relative flex min-h-[88vh] w-full items-center overflow-hidden bg-white dark:bg-gray-950 transition-colors"
     >
       <div className="mx-auto flex w-full max-w-[1340px] items-center justify-between px-5 lg:px-8">
         {/* Left content */}
         <div className="relative z-10 max-w-xl py-16 lg:py-24">
-          <h1 className="text-[3.2rem] leading-[1.12] tracking-tight text-black lg:text-[4rem]">
+          <h1 className="text-[3.2rem] leading-[1.12] tracking-tight text-black dark:text-white lg:text-[4rem]">
             <span className="font-light font-[family-name:var(--font-playfair)]">
               Admire{" "}
             </span>
-            <span className="font-light italic text-gray-500 font-[family-name:var(--font-playfair)]">
+            <span className="font-light italic text-gray-500 dark:text-gray-400 font-[family-name:var(--font-playfair)]">
               Stylish
             </span>
             <br />
@@ -60,7 +60,7 @@ export default function HeroSection({ activeDiscount }: { activeDiscount?: any }
             </span>
           </h1>
 
-          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-gray-500">
+          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
             If we wanted to build a human-level tool to offer automated outfit
             advice, We need to understand people&apos;s fashion tastes.
           </p>
@@ -74,9 +74,9 @@ export default function HeroSection({ activeDiscount }: { activeDiscount?: any }
                 { value: isMounted ? pad(minutes) : "00", label: "Minutes" },
                 { value: isMounted ? pad(seconds) : "00", label: "Seconds" },
               ].map((item) => (
-                <div key={item.label} className="countdown-box">
-                  <span className="number">{item.value}</span>
-                  <span className="label">{item.label}</span>
+                <div key={item.label} className="countdown-box dark:border-gray-800">
+                  <span className="number dark:text-white">{item.value}</span>
+                  <span className="label dark:text-gray-400">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -94,7 +94,7 @@ export default function HeroSection({ activeDiscount }: { activeDiscount?: any }
             {activeDiscount && (
               <a
                 href="#black-friday"
-                className="inline-flex items-center justify-center rounded-full border-2 border-black bg-black px-7 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white transition-all hover:bg-gray-900"
+                className="inline-flex items-center justify-center rounded-full border-2 border-black dark:border-white bg-black dark:bg-white px-7 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white dark:text-black transition-all hover:bg-gray-900 dark:hover:bg-gray-200"
               >
                 {activeDiscount.name}
               </a>

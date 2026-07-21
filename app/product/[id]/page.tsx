@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import AddToCartSection from "@/components/AddToCartSection";
+import RatingSection from "@/components/RatingSection";
 import { ChevronLeft } from "lucide-react";
 
 export default async function ProductPage({
@@ -24,15 +25,42 @@ export default async function ProductPage({
     return (
       <>
         <Navbar />
-        <div className="flex h-[70vh] items-center justify-center flex-col gap-4">
-          <h1 className="text-3xl font-[family-name:var(--font-playfair)] font-bold text-gray-900">Product Not Found</h1>
-          <p className="text-gray-500">The product you are looking for does not exist.</p>
-          <Link href="/" className="mt-4 px-6 py-2 bg-black text-white text-sm font-semibold tracking-widest uppercase hover:bg-gray-800 transition-colors">
+        <div className="flex h-[70vh] items-center justify-center flex-col gap-4 bg-white dark:bg-[#0a0a0a]">
+          <h1 className="text-3xl font-[family-name:var(--font-playfair)] font-bold text-gray-900 dark:text-white">Product Not Found</h1>
+          <p className="text-gray-500 dark:text-gray-400">The product you are looking for does not exist.</p>
+          <Link href="/" className="mt-4 px-6 py-2 bg-black text-white dark:bg-white dark:text-black text-sm font-semibold tracking-widest uppercase hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
             Return Home
           </Link>
         </div>
       </>
     );
+  }
+
+  // Fetch ratings
+  const { data: ratingsData, error: ratingsError } = await supabase
+    .from("product_ratings")
+    .select("rating, user_id")
+    .eq("product_id", id);
+
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
+  const isLoggedIn = !!userId;
+
+  let totalReviews = 0;
+  let initialAverage = 0;
+  let userRating = null;
+
+  if (ratingsData && !ratingsError) {
+    totalReviews = ratingsData.length;
+    if (totalReviews > 0) {
+      initialAverage = ratingsData.reduce((acc, curr) => acc + curr.rating, 0) / totalReviews;
+    }
+    if (userId) {
+      const userRatingData = ratingsData.find((r) => r.user_id === userId);
+      if (userRatingData) {
+        userRating = userRatingData.rating;
+      }
+    }
   }
 
   // Fetch active discounts to see if this product is on sale
@@ -77,17 +105,17 @@ export default async function ProductPage({
   return (
     <>
       <Navbar />
-      <div className="bg-white min-h-screen pt-10 pb-24">
+      <div className="bg-white dark:bg-[#0a0a0a] min-h-screen pt-10 pb-24 transition-colors">
         <div className="mx-auto max-w-[1200px] px-5 lg:px-8">
           
-          <Link href={`/category/${categorySlug}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black transition-colors mb-8 font-medium">
+          <Link href={`/category/${categorySlug}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors mb-8 font-medium">
             <ChevronLeft size={16} />
             Back to {product.category}
           </Link>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
             {/* Image Column */}
-            <div className="relative aspect-[3/4] w-full bg-[#f8f8f8] rounded-md overflow-hidden">
+            <div className="relative aspect-[3/4] w-full bg-[#f8f8f8] dark:bg-gray-900 rounded-md overflow-hidden border border-gray-100 dark:border-gray-800">
               {badgeStr && (
                 <div className="absolute top-4 left-4 z-10 bg-[#e6193c] text-white text-[12px] font-bold uppercase tracking-wider px-3 py-1.5 shadow-sm">
                   {badgeStr}
@@ -111,7 +139,7 @@ export default async function ProductPage({
 
             {/* Details Column */}
             <div className="flex flex-col pt-4">
-              <h1 className="text-3xl md:text-4xl font-bold text-black font-[family-name:var(--font-playfair)] tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-black dark:text-white font-[family-name:var(--font-playfair)] tracking-tight leading-tight">
                 {product.name}
               </h1>
               
@@ -119,38 +147,49 @@ export default async function ProductPage({
                 {discountedPriceStr ? (
                   <>
                     <span className="text-2xl font-bold text-[#e6193c]">{discountedPriceStr}</span>
-                    <span className="text-lg text-gray-400 line-through mb-0.5">
+                    <span className="text-lg text-gray-400 dark:text-gray-500 line-through mb-0.5">
                       {product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}
                     </span>
                   </>
                 ) : (
-                  <span className="text-2xl font-bold text-black">
+                  <span className="text-2xl font-bold text-black dark:text-white">
                     {product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}
                   </span>
                 )}
               </div>
 
-              <div className="mt-8 pt-8 border-t border-gray-100">
-                <p className="text-gray-600 leading-relaxed">
+              {/* Client Component for stateful actions (Size & Add to Cart) */}
+              <div className="mt-8">
+                <AddToCartSection 
+                  product={product} 
+                  discountedPriceStr={discountedPriceStr}
+                  finalPriceNumber={finalPriceNumber}
+                />
+              </div>
+
+              {/* Ratings Section */}
+              <RatingSection
+                productId={product.id}
+                initialAverage={initialAverage}
+                totalReviews={totalReviews}
+                userRating={userRating}
+                isLoggedIn={isLoggedIn}
+              />
+
+              <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                   Elevate your style with this premium {product.category.toLowerCase()} piece. Designed with meticulous attention to detail and crafted from high-quality materials for ultimate comfort and durability.
                 </p>
               </div>
 
-              {/* Client Component for stateful actions (Size & Add to Cart) */}
-              <AddToCartSection 
-                product={product} 
-                discountedPriceStr={discountedPriceStr}
-                finalPriceNumber={finalPriceNumber}
-              />
-
-              <div className="mt-12 space-y-4">
-                <div className="flex justify-between py-4 border-b border-gray-100">
-                  <span className="text-sm font-semibold text-gray-900">Delivery</span>
-                  <span className="text-sm text-gray-500">2-4 Business Days</span>
+              <div className="mt-12 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-8">
+                <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-800/50">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Delivery</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">2-4 Business Days</span>
                 </div>
-                <div className="flex justify-between py-4 border-b border-gray-100">
-                  <span className="text-sm font-semibold text-gray-900">Returns</span>
-                  <span className="text-sm text-gray-500">Free within 30 days</span>
+                <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-800/50">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Returns</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Free within 30 days</span>
                 </div>
               </div>
             </div>

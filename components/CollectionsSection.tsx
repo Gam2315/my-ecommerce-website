@@ -31,10 +31,10 @@ const collections = [
 
 export default function CollectionsSection() {
   return (
-    <section id="collections" className="relative w-full bg-white py-20">
+    <section id="collections" className="relative w-full bg-white dark:bg-[#0a0a0a] py-20 transition-colors">
       {/* Background watermark */}
       <div className="pointer-events-none absolute inset-x-0 top-12 flex justify-center overflow-hidden">
-        <span className="watermark-text">COLLECTION</span>
+        <span className="watermark-text dark:text-white/5">COLLECTION</span>
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1340px] px-5 lg:px-8">
@@ -44,10 +44,10 @@ export default function CollectionsSection() {
             <div
               key={col.id}
               id={col.id}
-              className="group flex flex-col items-center justify-center h-56 w-full bg-gray-50 border border-gray-100 rounded-xl cursor-pointer transition-all hover:bg-white hover:shadow-lg"
+              className="group flex flex-col items-center justify-center h-56 w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl cursor-pointer transition-all hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg"
             >
-              <h3 className="text-2xl font-bold tracking-[4px] text-gray-900 group-hover:text-[#e6193c] transition-colors">{col.title}</h3>
-              <p className="text-xs text-gray-400 mt-2 tracking-[2px] uppercase">{col.subtitle}</p>
+              <h3 className="text-2xl font-bold tracking-[4px] text-gray-900 dark:text-white group-hover:text-[#e6193c] transition-colors">{col.title}</h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 tracking-[2px] uppercase">{col.subtitle}</p>
             </div>
           ))}
         </div>

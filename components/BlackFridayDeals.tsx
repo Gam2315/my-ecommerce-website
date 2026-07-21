@@ -10,7 +10,7 @@ export default function BlackFridayDeals({ activeDiscount }: { activeDiscount?: 
   return (
     <section
       id="black-friday"
-      className="w-full bg-white py-20"
+      className="w-full bg-white dark:bg-[#0a0a0a] py-20 transition-colors"
     >
       <div className="mx-auto max-w-[1340px] px-5 lg:px-8">
         {/* Header */}
@@ -21,7 +21,7 @@ export default function BlackFridayDeals({ activeDiscount }: { activeDiscount?: 
           >
             {activeDiscount.name} - {activeDiscount.type === 'Percentage' ? `${activeDiscount.value}% OFF` : `₱${activeDiscount.value} OFF`}
           </span>
-          <h2 className="mt-3 text-[2.2rem] tracking-tight text-black font-[family-name:var(--font-playfair)]">
+          <h2 className="mt-3 text-[2.2rem] tracking-tight text-black dark:text-white font-[family-name:var(--font-playfair)]">
             Your{" "}
             <span className="font-bold">Perfect</span>{" "}
             <span className="font-light italic">Match</span>
@@ -54,7 +54,7 @@ export default function BlackFridayDeals({ activeDiscount }: { activeDiscount?: 
           </div>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-gray-500 font-medium">Enjoy our {activeDiscount.name}! Prices are automatically discounted.</p>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">Enjoy our {activeDiscount.name}! Prices are automatically discounted.</p>
           </div>
         )}
       </div>
