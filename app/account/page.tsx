@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { Package, User, CheckCircle, XCircle, Clock, Truck } from "lucide-react";
+import { Package, User, CheckCircle, XCircle, Clock, Truck, Star } from "lucide-react";
 import Image from "next/image";
+import ReviewForm from "@/components/ReviewForm";
 
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<"orders" | "profile">("orders");
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewingItemId, setReviewingItemId] = useState<string | null>(null);
   
   // Profile form state
   const [fullName, setFullName] = useState("");
@@ -214,27 +216,53 @@ export default function AccountPage() {
                           </div>
 
                           <div className="space-y-4">
-                            {order.items?.map((item: any, idx: number) => (
-                              <div key={idx} className="flex gap-4 items-center">
-                                <div className="w-16 h-20 relative bg-gray-100 rounded-md overflow-hidden shrink-0 border border-gray-200">
-                                  {item.image ? (
-                                    <Image src={item.image} alt={item.name} fill className="object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No Img</div>
+                            {order.items?.map((item: any, idx: number) => {
+                              const itemKey = `${order.id}-${item.id || idx}`;
+                              const isReviewing = reviewingItemId === itemKey;
+                              
+                              return (
+                                <div key={idx} className="flex flex-col gap-3">
+                                  <div className="flex gap-4 items-center">
+                                    <div className="w-16 h-20 relative bg-gray-100 rounded-md overflow-hidden shrink-0 border border-gray-200">
+                                      {item.image ? (
+                                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No Img</div>
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-medium text-gray-900 leading-tight mb-1">{item.name}</h4>
+                                      <p className="text-xs text-gray-500 mb-2">
+                                        {item.size && <span className="mr-2">Size: {item.size}</span>}
+                                        Qty: {item.quantity}
+                                      </p>
+                                      
+                                      {order.status === "Delivered" || order.status === "Completed" ? (
+                                        <button
+                                          onClick={() => setReviewingItemId(isReviewing ? null : itemKey)}
+                                          className="text-xs font-medium text-[#e6193c] hover:text-[#c41432] flex items-center gap-1 transition-colors"
+                                        >
+                                          <Star size={12} />
+                                          {isReviewing ? "Cancel Review" : "Leave a Review"}
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      ₱{(item.price * item.quantity).toFixed(2)}
+                                    </div>
+                                  </div>
+                                  
+                                  {isReviewing && (
+                                    <div className="ml-[80px]">
+                                      <ReviewForm 
+                                        productId={item.id} 
+                                        onSuccess={() => setReviewingItemId(null)}
+                                      />
+                                    </div>
                                   )}
                                 </div>
-                                <div className="flex-1">
-                                  <h4 className="text-sm font-medium text-gray-900 leading-tight mb-1">{item.name}</h4>
-                                  <p className="text-xs text-gray-500">
-                                    {item.size && <span className="mr-2">Size: {item.size}</span>}
-                                    Qty: {item.quantity}
-                                  </p>
-                                </div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  ₱{(item.price * item.quantity).toFixed(2)}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       </div>

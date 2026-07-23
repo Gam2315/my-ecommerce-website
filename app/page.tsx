@@ -20,6 +20,38 @@ export default async function Home() {
 
   const activeDiscount = activeDiscounts && activeDiscounts.length > 0 ? activeDiscounts[0] : null;
 
+  const { data: allRatings } = await supabase
+    .from("product_ratings")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  let enrichedRatings = allRatings || [];
+
+  if (allRatings && allRatings.length > 0) {
+    const { createClient: createAdmin } = require('@supabase/supabase-js');
+    const adminSupabase = createAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    // Fetch users to get their names
+    const { data: { users } } = await adminSupabase.auth.admin.listUsers();
+    
+    // Fetch products to get product names
+    const { data: products } = await supabase.from("products").select("id, name");
+    
+    enrichedRatings = allRatings.map(rating => {
+      const user = users.find((u: any) => u.id === rating.user_id);
+      const product = products?.find((p: any) => p.id.toString() === rating.product_id?.toString());
+      
+      return {
+        ...rating,
+        user_name: user?.user_metadata?.full_name || "Verified Customer",
+        product_name: product?.name
+      };
+    });
+  }
+
   return (
     <>
       <Navbar />
@@ -28,7 +60,7 @@ export default async function Home() {
         <BlackFridayDeals activeDiscount={activeDiscount} />
         <BestSellers />
         <CollectionsSection />
-        <TestimonialsSection />
+        <TestimonialsSection reviews={enrichedRatings} />
         <BrandsSection />
       </main>
       <FloatingElements />

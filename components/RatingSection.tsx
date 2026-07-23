@@ -27,6 +27,7 @@ export default function RatingSection({
 
   // Optimistic UI update
   const [optimisticUserRating, setOptimisticUserRating] = useState<number | null>(userRating);
+  const [reviewText, setReviewText] = useState("");
 
   const handleRate = (rating: number) => {
     if (!isLoggedIn) {
@@ -34,15 +35,27 @@ export default function RatingSection({
       router.push("/login");
       return;
     }
-
     setOptimisticUserRating(rating);
+  };
+
+  const handleSubmit = () => {
+    if (!isLoggedIn) {
+      toast.error("Please log in to submit a review.");
+      router.push("/login");
+      return;
+    }
+    if (!optimisticUserRating) {
+      toast.error("Please select a star rating.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await submitRating(productId, rating);
+      const result = await submitRating(productId, optimisticUserRating, reviewText);
       if (result.success) {
-        toast.success("Thank you for your rating!");
+        toast.success("Thank you for your review!");
+        setReviewText("");
       } else {
         toast.error(result.error || "Failed to submit rating.");
-        setOptimisticUserRating(userRating); // Revert on failure
       }
     });
   };
@@ -50,8 +63,8 @@ export default function RatingSection({
   const currentDisplayRating = hoveredStar > 0 ? hoveredStar : optimisticUserRating;
 
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-      <div className="flex flex-col">
+    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-4">
+      <div>
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Customer Rating</h3>
         <div className="flex items-center gap-2">
           <div className="flex">
@@ -83,10 +96,32 @@ export default function RatingSection({
             ({totalReviews} {totalReviews === 1 ? "review" : "reviews"})
           </span>
         </div>
-        {optimisticUserRating && (
-          <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">You rated this {optimisticUserRating} stars</p>
-        )}
       </div>
+
+      {isLoggedIn ? (
+        <div className="flex flex-col gap-2 w-full mt-2">
+          <textarea
+            placeholder="Write your review here... (optional)"
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            disabled={isPending}
+            className="w-full min-h-[100px] p-3 text-sm border border-gray-200 dark:border-gray-800 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white resize-y"
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmit}
+              disabled={isPending || !optimisticUserRating}
+              className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black text-xs font-semibold uppercase tracking-wider rounded disabled:opacity-50 transition-opacity"
+            >
+              {isPending ? "Submitting..." : "Submit Review"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          Log in to leave a review.
+        </p>
+      )}
     </div>
   );
 }

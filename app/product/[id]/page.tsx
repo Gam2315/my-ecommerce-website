@@ -39,7 +39,7 @@ export default async function ProductPage({
   // Fetch ratings
   const { data: ratingsData, error: ratingsError } = await supabase
     .from("product_ratings")
-    .select("rating, user_id")
+    .select("*")
     .eq("product_id", id);
 
   const { data: userData } = await supabase.auth.getUser();
@@ -167,14 +167,7 @@ export default async function ProductPage({
                 />
               </div>
 
-              {/* Ratings Section */}
-              <RatingSection
-                productId={product.id}
-                initialAverage={initialAverage}
-                totalReviews={totalReviews}
-                userRating={userRating}
-                isLoggedIn={isLoggedIn}
-              />
+              {/* Removed RatingSection as per user request */}
 
               <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
