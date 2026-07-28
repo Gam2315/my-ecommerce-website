@@ -1,5 +1,3 @@
-import Stripe from 'stripe'
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-06-24.dahlia',
-})
+// This file is no longer used. PayMongo is the payment gateway.
+// See lib/paymongo.ts for the new implementation.
+// This file can be safely deleted.

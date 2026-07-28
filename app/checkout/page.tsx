@@ -6,11 +6,49 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, Lock } from "lucide-react";
+import { ChevronLeft, Lock, Wallet, CreditCard, Banknote, Smartphone } from "lucide-react";
+
+const PAYMENT_METHODS = [
+  {
+    id: 'GCash',
+    label: 'GCash',
+    description: 'Pay with your GCash e-wallet',
+    color: '#007DFE',
+    icon: Smartphone,
+  },
+  {
+    id: 'GrabPay',
+    label: 'GrabPay',
+    description: 'Pay with your GrabPay wallet',
+    color: '#00B14F',
+    icon: Wallet,
+  },
+  {
+    id: 'Maya',
+    label: 'Maya',
+    description: 'Pay with your Maya (PayMaya) wallet',
+    color: '#2DBB54',
+    icon: Wallet,
+  },
+  {
+    id: 'Card',
+    label: 'Credit / Debit Card',
+    description: 'Visa, Mastercard — processed securely via PayMongo',
+    color: '#1A1F71',
+    icon: CreditCard,
+  },
+  {
+    id: 'COD',
+    label: 'Cash on Delivery (COD)',
+    description: 'Pay with cash upon delivery',
+    color: '#000000',
+    icon: Banknote,
+  },
+];
 
 export default function CheckoutPage() {
   const { items, selectedItems, selectedTotal, removeSelectedFromCart } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -41,18 +79,26 @@ export default function CheckoutPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    const customerName = formData.get("fullName") as string;
+    const customerEmail = formData.get("email") as string;
+    const customerPhone = formData.get("phone") as string;
+    const shippingAddress = formData.get("address") as string;
+
+    const isCOD = paymentMethod === 'COD';
+
     const orderData = {
-      customer_name: formData.get("fullName") as string,
-      customer_email: formData.get("email") as string,
-      customer_phone: formData.get("phone") as string,
-      shipping_address: formData.get("address") as string,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      customer_phone: customerPhone,
+      shipping_address: shippingAddress,
       payment_method: paymentMethod,
       total_amount: checkoutTotal,
       items: checkoutItems,
-      status: 'Pending',
-      user_id: userId
+      status: isCOD ? 'Pending' : 'Awaiting Payment',
+      user_id: userId,
     };
 
+    // Insert order into Supabase
     const { data, error: insertError } = await supabase
       .from("orders")
       .insert([orderData])
@@ -60,35 +106,73 @@ export default function CheckoutPage() {
 
     if (insertError) {
       console.error(insertError);
-      setError("Failed to place order. Did you create the orders table in Supabase?");
+      setError("Failed to place order. Please try again.");
       setIsSubmitting(false);
       return;
     }
 
-    // Deduct stock for each item
-    for (const item of checkoutItems) {
-      const { data: product } = await supabase.from('products').select('*').eq('id', item.productId).single();
-      
-      if (product) {
-        if (item.size && product.sizes) {
-          // Deduct from specific size
-          const newSizes = { ...product.sizes };
-          if (typeof newSizes[item.size] === 'number') {
-            newSizes[item.size] = Math.max(0, newSizes[item.size] - item.quantity);
+    const orderId = data[0].id;
+
+    if (isCOD) {
+      // COD: deduct stock immediately and go to success
+      for (const item of checkoutItems) {
+        const { data: product } = await supabase.from('products').select('*').eq('id', item.productId).single();
+        
+        if (product) {
+          if (item.size && product.sizes) {
+            const newSizes = { ...product.sizes };
+            if (typeof newSizes[item.size] === 'number') {
+              newSizes[item.size] = Math.max(0, newSizes[item.size] - item.quantity);
+            }
+            await supabase.from('products').update({ sizes: newSizes }).eq('id', product.id);
+          } else {
+            const newStock = Math.max(0, (product.stock || 0) - item.quantity);
+            const newStatus = newStock === 0 ? "Out of Stock" : product.status;
+            await supabase.from('products').update({ stock: newStock, status: newStatus }).eq('id', product.id);
           }
-          await supabase.from('products').update({ sizes: newSizes }).eq('id', product.id);
-        } else {
-          // Deduct from general stock
-          const newStock = Math.max(0, (product.stock || 0) - item.quantity);
-          const newStatus = newStock === 0 ? "Out of Stock" : product.status;
-          await supabase.from('products').update({ stock: newStock, status: newStatus }).eq('id', product.id);
         }
       }
-    }
 
-    // Success! Remove only selected items from the cart
-    removeSelectedFromCart();
-    router.push(`/checkout/success?id=${data[0].id}`);
+      removeSelectedFromCart();
+      router.push(`/checkout/success?id=${orderId}`);
+    } else {
+      // Online payment: create PayMongo checkout session and redirect
+      try {
+        const response = await fetch('/api/paymongo/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: checkoutItems,
+            paymentMethodType: paymentMethod,
+            orderId: orderId,
+            customer: {
+              name: customerName,
+              email: customerEmail,
+              phone: customerPhone,
+            },
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to initiate payment');
+        }
+
+        // Clear selected items from cart before redirecting
+        removeSelectedFromCart();
+
+        // Redirect to PayMongo's hosted checkout page
+        window.location.href = result.checkout_url;
+      } catch (err: any) {
+        console.error('PayMongo checkout error:', err);
+        setError(err.message || 'Failed to initiate payment. Please try again.');
+        
+        // Rollback: delete the order since payment initiation failed
+        await supabase.from('orders').delete().eq('id', orderId);
+        setIsSubmitting(false);
+      }
+    }
   };
 
   if (checkoutItems.length === 0) {
@@ -173,72 +257,57 @@ export default function CheckoutPage() {
 
             {/* Payment Method */}
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 font-[family-name:var(--font-playfair)]">Payment Method</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-[family-name:var(--font-playfair)]">Payment Method</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                {paymentMethod === 'COD' 
+                  ? 'Pay with cash when your order arrives.' 
+                  : 'You will be redirected to complete payment securely via PayMongo.'}
+              </p>
               
               <div className="space-y-3">
-                {/* GCash */}
-                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${paymentMethod === 'GCash' ? 'border-[#007DFE] bg-blue-50/30 dark:bg-blue-950/30' : 'border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'}`}>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="radio" 
-                      name="payment_method" 
-                      value="GCash"
-                      checked={paymentMethod === 'GCash'}
-                      onChange={() => setPaymentMethod('GCash')}
-                      className="w-4 h-4 accent-[#007DFE]"
-                    />
-                    <span className="font-semibold text-gray-900 dark:text-white">GCash</span>
-                  </div>
-                  {paymentMethod === 'GCash' && (
-                    <div className="mt-4 pl-7">
-                      <input type="tel" placeholder="GCash Mobile Number" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-[#007DFE] text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-                    </div>
-                  )}
-                </label>
-
-                {/* VISA */}
-                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${paymentMethod === 'Visa' ? 'border-[#1A1F71] bg-blue-50/30 dark:bg-blue-950/30' : 'border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'}`}>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="radio" 
-                      name="payment_method" 
-                      value="Visa"
-                      checked={paymentMethod === 'Visa'}
-                      onChange={() => setPaymentMethod('Visa')}
-                      className="w-4 h-4 accent-[#1A1F71]"
-                    />
-                    <span className="font-semibold text-gray-900 dark:text-white">Credit/Debit Card (Visa)</span>
-                  </div>
-                  {paymentMethod === 'Visa' && (
-                    <div className="mt-4 pl-7 space-y-3">
-                      <input type="text" placeholder="Card Number" className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-[#1A1F71] text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-                      <div className="flex gap-3">
-                        <input type="text" placeholder="MM/YY" className="w-1/2 px-4 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-[#1A1F71] text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-                        <input type="text" placeholder="CVC" className="w-1/2 px-4 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-[#1A1F71] text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                {PAYMENT_METHODS.map((method) => {
+                  const isSelected = paymentMethod === method.id;
+                  const Icon = method.icon;
+                  
+                  return (
+                    <label 
+                      key={method.id}
+                      className={`block border rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                        isSelected 
+                          ? 'border-2 shadow-sm' 
+                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'
+                      }`}
+                      style={isSelected ? { borderColor: method.color, backgroundColor: `${method.color}08` } : {}}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="radio" 
+                          name="payment_method" 
+                          value={method.id}
+                          checked={isSelected}
+                          onChange={() => setPaymentMethod(method.id)}
+                          className="w-4 h-4 accent-current"
+                          style={{ accentColor: method.color }}
+                        />
+                        <div 
+                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ 
+                            backgroundColor: isSelected ? `${method.color}15` : 'rgb(243 244 246)',
+                          }}
+                        >
+                          <Icon 
+                            size={18} 
+                            style={{ color: isSelected ? method.color : '#9ca3af' }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-gray-900 dark:text-white text-sm">{method.label}</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{method.description}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </label>
-
-                {/* COD */}
-                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-black bg-gray-50 dark:border-white dark:bg-gray-800' : 'border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'}`}>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="radio" 
-                      name="payment_method" 
-                      value="COD"
-                      checked={paymentMethod === 'COD'}
-                      onChange={() => setPaymentMethod('COD')}
-                      className="w-4 h-4 accent-black dark:accent-white"
-                    />
-                    <span className="font-semibold text-gray-900 dark:text-white">Cash on Delivery (COD)</span>
-                  </div>
-                  {paymentMethod === 'COD' && (
-                    <div className="mt-3 pl-7 text-sm text-gray-500 dark:text-gray-300">
-                      Pay with cash upon delivery.
-                    </div>
-                  )}
-                </label>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
@@ -276,6 +345,10 @@ export default function CheckoutPage() {
                   <span className="text-gray-500 dark:text-gray-400">Shipping</span>
                   <span className="font-medium text-[#e6193c]">FREE</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Payment</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</span>
+                </div>
                 <div className="flex justify-between text-lg font-bold border-t border-gray-100 dark:border-gray-800 pt-3 text-gray-900 dark:text-white">
                   <span>Total</span>
                   <span>₱{checkoutTotal.toFixed(2)}</span>
@@ -285,10 +358,21 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-[#e6193c] hover:bg-[#c41432] text-white text-sm font-bold tracking-widest uppercase rounded-sm transition-colors disabled:opacity-50"
+                className="w-full py-4 bg-[#e6193c] hover:bg-[#c41432] text-white text-sm font-bold tracking-widest uppercase rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Processing..." : "Place Order"}
+                {isSubmitting 
+                  ? "Processing..." 
+                  : paymentMethod === 'COD' 
+                    ? "Place Order" 
+                    : `Pay ₱${checkoutTotal.toFixed(2)}`}
               </button>
+
+              {paymentMethod !== 'COD' && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-3 flex items-center justify-center gap-1.5">
+                  <Lock size={12} />
+                  Secured by PayMongo
+                </p>
+              )}
             </div>
           </div>
         </form>

@@ -2,23 +2,67 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
-import { Suspense } from "react";
+import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("id");
+  const orderId = searchParams.get("id") || searchParams.get("order_id");
+  const sessionId = searchParams.get("session_id");
+  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'paid' | 'pending' | 'cod'>('loading');
+
+  useEffect(() => {
+    if (sessionId) {
+      // This was a PayMongo payment — the webhook will confirm the payment.
+      // For UX we optimistically show "confirmed" since PayMongo only redirects on success.
+      setPaymentStatus('paid');
+    } else if (orderId) {
+      // No session_id means this was a COD order
+      setPaymentStatus('cod');
+    } else {
+      setPaymentStatus('pending');
+    }
+  }, [sessionId, orderId]);
+
+  const statusConfig = {
+    loading: {
+      icon: <Clock size={64} className="text-gray-400 animate-pulse" />,
+      title: "Verifying Payment...",
+      description: "Please wait while we confirm your payment.",
+      color: "text-gray-400",
+    },
+    paid: {
+      icon: <CheckCircle size={64} className="text-green-500" />,
+      title: "Payment Confirmed!",
+      description: "Your payment has been successfully processed. Your order is now being prepared.",
+      color: "text-green-500",
+    },
+    cod: {
+      icon: <CheckCircle size={64} className="text-green-500" />,
+      title: "Order Confirmed!",
+      description: "Your order has been placed. Please prepare cash for the delivery.",
+      color: "text-green-500",
+    },
+    pending: {
+      icon: <AlertCircle size={64} className="text-orange-500" />,
+      title: "Payment Pending",
+      description: "We're still waiting for your payment to be confirmed. You'll receive an email once it's processed.",
+      color: "text-orange-500",
+    },
+  };
+
+  const config = statusConfig[paymentStatus];
 
   return (
     <div className="bg-white dark:bg-gray-900 p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 max-w-lg w-full text-center">
       <div className="flex justify-center mb-6">
-        <CheckCircle size={64} className="text-green-500" />
+        {config.icon}
       </div>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 font-[family-name:var(--font-playfair)]">
-        Order Confirmed!
+        {config.title}
       </h1>
       <p className="text-gray-500 dark:text-gray-400 mb-8">
-        Thank you for shopping with XTRAFASHION. Your order has been successfully placed.
+        {config.description}
       </p>
 
       {orderId && (
