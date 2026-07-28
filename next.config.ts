@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      { module: /node_modules\/@supabase\/supabase-js/ },
+    ];
+    return config;
+  },
   images: {
     remotePatterns: [
       {
