@@ -146,6 +146,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadCart();
   }, [cartKey]);
 
+  // Re-fetch cart from cloud when the tab/window regains focus (cross-device sync)
+  useEffect(() => {
+    if (!cartKey || cartKey === "cart_guest" || !currentUser) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== "visible") return;
+
+      try {
+        const { data: { user: latestUser } } = await supabase.auth.getUser();
+        if (latestUser?.user_metadata?.cart && Array.isArray(latestUser.user_metadata.cart)) {
+          const cloudCart: CartItem[] = latestUser.user_metadata.cart;
+          const cloudString = JSON.stringify(cloudCart);
+
+          // Only update if the cloud cart differs from what we last synced
+          if (cloudString !== lastSyncedRef.current) {
+            lastSyncedRef.current = cloudString;
+            setItems(cloudCart);
+            localStorage.setItem(cartKey, cloudString);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to refresh cart from cloud on focus", e);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [cartKey, currentUser]);
+
   // Save to local storage and sync to Supabase cloud metadata on change
   useEffect(() => {
     if (!isMounted || !cartKey) return;
