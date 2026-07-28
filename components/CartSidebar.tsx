@@ -7,7 +7,20 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 export default function CartSidebar() {
-  const { isCartOpen, setIsCartOpen, items, updateQuantity, removeFromCart, cartTotal, isGuest } = useCart();
+  const { 
+    isCartOpen, 
+    setIsCartOpen, 
+    items, 
+    updateQuantity, 
+    removeFromCart, 
+    cartTotal, 
+    isGuest,
+    toggleSelectItem,
+    toggleSelectAll,
+    selectedItems,
+    selectedTotal,
+    selectedCount
+  } = useCart();
 
   // Close sidebar on escape key
   useEffect(() => {
@@ -95,8 +108,31 @@ export default function CartSidebar() {
             </div>
           ) : (
             <div className="flex flex-col gap-6">
+              {/* Select All Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={items.length > 0 && items.every((item) => item.selected !== false)}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 accent-[#e6193c] cursor-pointer"
+                  />
+                  <span>Select All ({items.length})</span>
+                </label>
+                <span>{selectedItems.length} selected</span>
+              </div>
+
               {items.map((item) => (
-                <div key={`${item.id}-${item.size}`} className="flex gap-4 group">
+                <div key={`${item.id}-${item.size}`} className="flex gap-3 items-center group">
+                  {/* Item Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={item.selected !== false}
+                    onChange={() => toggleSelectItem(item.id)}
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 accent-[#e6193c] cursor-pointer shrink-0"
+                    aria-label={`Select ${item.name}`}
+                  />
+
                   <div className="relative w-20 h-24 bg-gray-50 dark:bg-gray-800 rounded-md overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
                     <Image
                       src={item.image || "/placeholder.jpg"}
@@ -164,20 +200,33 @@ export default function CartSidebar() {
         {items.length > 0 && (
           <div className="border-t border-gray-100 dark:border-gray-800 p-5 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
             <div className="flex justify-between text-base font-bold text-gray-900 dark:text-white mb-5">
-              <span>Subtotal</span>
-              <span>₱{cartTotal.toFixed(2)}</span>
+              <span>Subtotal ({selectedCount} {selectedCount === 1 ? 'item' : 'items'})</span>
+              <span>₱{selectedTotal.toFixed(2)}</span>
             </div>
             
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-5">
               Taxes and shipping calculated at checkout.
             </p>
 
-            <Link href={isGuest ? "/login?redirect=/checkout" : "/checkout"}>
+            <Link 
+              href={isGuest ? "/login?redirect=/checkout" : "/checkout"}
+              onClick={(e) => {
+                if (selectedItems.length === 0) {
+                  e.preventDefault();
+                } else {
+                  setIsCartOpen(false);
+                }
+              }}
+            >
               <button 
-                className="w-full bg-[#e6193c] text-white font-bold tracking-wider py-4 rounded-md hover:bg-black dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                onClick={() => setIsCartOpen(false)}
+                disabled={selectedItems.length === 0}
+                className={`w-full font-bold tracking-wider py-4 rounded-md transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                  selectedItems.length === 0 
+                    ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "bg-[#e6193c] text-white hover:bg-black dark:hover:bg-gray-700"
+                }`}
               >
-                PROCEED TO CHECKOUT
+                {selectedItems.length === 0 ? "SELECT ITEMS TO CHECKOUT" : `PROCEED TO CHECKOUT (${selectedCount})`}
               </button>
             </Link>
           </div>

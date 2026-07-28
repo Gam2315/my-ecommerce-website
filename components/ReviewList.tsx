@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 interface Review {
   rating: number;
   review_text?: string;
+  photo_url?: string;
   created_at?: string;
   user_id: string;
   user_name?: string;
@@ -15,16 +16,18 @@ interface ReviewListProps {
 }
 
 export default function ReviewList({ reviews }: ReviewListProps) {
-  const reviewsWithText = reviews.filter((r) => r.review_text && r.review_text.trim().length > 0);
+  const displayableReviews = reviews.filter((r) => 
+    (r.review_text && r.review_text.trim().length > 0) || r.photo_url
+  );
 
-  if (reviewsWithText.length === 0) {
+  if (displayableReviews.length === 0) {
     return (
       <div className="mt-12 border-t border-gray-100 dark:border-gray-800 pt-8">
         <h3 className="text-xl font-bold font-[family-name:var(--font-playfair)] mb-6 text-gray-900 dark:text-gray-100">
           Customer Reviews
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No written reviews yet. Be the first to share your thoughts!
+          No reviews yet. Be the first to share your thoughts!
         </p>
       </div>
     );
@@ -36,7 +39,7 @@ export default function ReviewList({ reviews }: ReviewListProps) {
         Customer Reviews
       </h3>
       <div className="space-y-6">
-        {reviewsWithText.map((review, index) => {
+        {displayableReviews.map((review, index) => {
           const displayName = review.user_name || "Anonymous";
           const initial = displayName.charAt(0).toUpperCase();
 
@@ -81,9 +84,24 @@ export default function ReviewList({ reviews }: ReviewListProps) {
               </div>
 
               {/* Review text */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {review.review_text}
-              </p>
+              {review.review_text && (
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
+                  {review.review_text}
+                </p>
+              )}
+
+              {/* Review photo */}
+              {review.photo_url && (
+                <div className="mt-2 relative w-28 h-28 sm:w-36 sm:h-36 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                  <img
+                    src={review.photo_url}
+                    alt="Customer review photo"
+                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                    onClick={() => window.open(review.photo_url, '_blank')}
+                    title="Click to view full image"
+                  />
+                </div>
+              )}
             </div>
           );
         })}

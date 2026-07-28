@@ -14,6 +14,7 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingItemId, setReviewingItemId] = useState<string | null>(null);
+  const [ratedProductIds, setRatedProductIds] = useState<Set<string>>(new Set());
   
   // Profile form state
   const [fullName, setFullName] = useState("");
@@ -48,6 +49,16 @@ export default function AccountPage() {
         
       if (!orderError && orderData) {
         setOrders(orderData);
+      }
+
+      // Fetch user's rated products
+      const { data: ratingsData } = await supabase
+        .from("product_ratings")
+        .select("product_id")
+        .eq("user_id", user.id);
+        
+      if (ratingsData) {
+        setRatedProductIds(new Set(ratingsData.map((r: any) => r.product_id?.toString())));
       }
       setLoading(false);
     };
@@ -108,37 +119,37 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors">
         <Navbar />
         <div className="flex justify-center items-center h-[60vh]">
-          <p className="text-gray-500">Loading your account...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading your account...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 transition-colors">
       <Navbar />
       
       <div className="max-w-[1000px] mx-auto px-5 lg:px-8 mt-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 font-[family-name:var(--font-playfair)]">My Account</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 font-[family-name:var(--font-playfair)]">My Account</h1>
         
         <div className="flex flex-col md:flex-row gap-8">
           
           {/* Sidebar Tabs */}
           <div className="w-full md:w-64 shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <button 
                 onClick={() => setActiveTab("orders")}
-                className={`w-full flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-50 text-[#e6193c] border-l-2 border-[#e6193c]' : 'text-gray-600 hover:bg-gray-50 border-l-2 border-transparent'}`}
+                className={`w-full flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-50 dark:bg-gray-800 text-[#e6193c] border-l-2 border-[#e6193c]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 border-l-2 border-transparent'}`}
               >
                 <Package size={18} />
                 My Orders
               </button>
               <button 
                 onClick={() => setActiveTab("profile")}
-                className={`w-full flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-gray-50 text-[#e6193c] border-l-2 border-[#e6193c]' : 'text-gray-600 hover:bg-gray-50 border-l-2 border-transparent'}`}
+                className={`w-full flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-gray-50 dark:bg-gray-800 text-[#e6193c] border-l-2 border-[#e6193c]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 border-l-2 border-transparent'}`}
               >
                 <User size={18} />
                 Profile Settings
@@ -152,13 +163,13 @@ export default function AccountPage() {
             {/* Orders Tab */}
             {activeTab === "orders" && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 font-[family-name:var(--font-playfair)]">Order History</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 font-[family-name:var(--font-playfair)]">Order History</h2>
                 
                 {orders.length === 0 ? (
-                  <div className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
-                    <Package size={48} className="mx-auto text-gray-300 mb-4" />
-                    <p className="text-lg font-medium text-gray-900">No orders yet</p>
-                    <p className="text-gray-500 mt-1">When you place an order, it will appear here.</p>
+                  <div className="bg-white dark:bg-gray-900 p-12 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 text-center">
+                    <Package size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">No orders yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">When you place an order, it will appear here.</p>
                   </div>
                 ) : (
                   orders.map((order) => {
@@ -166,20 +177,20 @@ export default function AccountPage() {
                     const isShipped = order.status === "Shipped";
                     
                     return (
-                      <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                      <div key={order.id} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                         {/* Order Header */}
-                        <div className="bg-gray-50 p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Order Placed</p>
-                            <p className="text-sm font-medium text-gray-900">{new Date(order.created_at).toLocaleDateString()}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Order Placed</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{new Date(order.created_at).toLocaleDateString()}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Total</p>
-                            <p className="text-sm font-medium text-gray-900">₱{Number(order.total_amount).toFixed(2)}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Total</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">₱{Number(order.total_amount).toFixed(2)}</p>
                           </div>
                           <div className="sm:text-right">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Order #</p>
-                            <p className="text-sm font-medium text-gray-900">{order.id.split('-')[0].toUpperCase()}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Order #</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{order.id.split('-')[0].toUpperCase()}</p>
                           </div>
                         </div>
 
@@ -188,7 +199,7 @@ export default function AccountPage() {
                           <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(order.status)}
-                              <span className="font-semibold text-gray-900">{order.status}</span>
+                              <span className="font-semibold text-gray-900 dark:text-white">{order.status}</span>
                             </div>
                             
                             <div className="flex gap-2">
@@ -199,7 +210,7 @@ export default function AccountPage() {
                                       handleUpdateOrderStatus(order.id, "Cancelled")
                                     }
                                   }}
-                                  className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                  className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors"
                                 >
                                   Cancel Order
                                 </button>
@@ -219,11 +230,13 @@ export default function AccountPage() {
                             {order.items?.map((item: any, idx: number) => {
                               const itemKey = `${order.id}-${item.id || idx}`;
                               const isReviewing = reviewingItemId === itemKey;
+                              const targetProductId = item.productId ? item.productId.toString() : item.id ? item.id.toString().split('_')[0] : "";
+                              const hasRatedThisProduct = targetProductId ? ratedProductIds.has(targetProductId) : false;
                               
                               return (
                                 <div key={idx} className="flex flex-col gap-3">
                                   <div className="flex gap-4 items-center">
-                                    <div className="w-16 h-20 relative bg-gray-100 rounded-md overflow-hidden shrink-0 border border-gray-200">
+                                    <div className="w-16 h-20 relative bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
                                       {item.image ? (
                                         <Image src={item.image} alt={item.name} fill className="object-cover" />
                                       ) : (
@@ -231,32 +244,44 @@ export default function AccountPage() {
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <h4 className="text-sm font-medium text-gray-900 leading-tight mb-1">{item.name}</h4>
-                                      <p className="text-xs text-gray-500 mb-2">
+                                      <h4 className="text-sm font-medium text-gray-900 dark:text-white leading-tight mb-1">{item.name}</h4>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                         {item.size && <span className="mr-2">Size: {item.size}</span>}
                                         Qty: {item.quantity}
                                       </p>
                                       
                                       {order.status === "Delivered" || order.status === "Completed" ? (
-                                        <button
-                                          onClick={() => setReviewingItemId(isReviewing ? null : itemKey)}
-                                          className="text-xs font-medium text-[#e6193c] hover:text-[#c41432] flex items-center gap-1 transition-colors"
-                                        >
-                                          <Star size={12} />
-                                          {isReviewing ? "Cancel Review" : "Leave a Review"}
-                                        </button>
+                                        hasRatedThisProduct ? (
+                                          <div className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1.5 mt-1">
+                                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            You have already rated this product.
+                                          </div>
+                                        ) : (
+                                          <button
+                                            onClick={() => setReviewingItemId(isReviewing ? null : itemKey)}
+                                            className="text-xs font-medium text-[#e6193c] hover:text-[#c41432] flex items-center gap-1 transition-colors"
+                                          >
+                                            <Star size={12} />
+                                            {isReviewing ? "Cancel Review" : "Leave a Review"}
+                                          </button>
+                                        )
                                       ) : null}
                                     </div>
-                                    <div className="text-sm font-medium text-gray-900">
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                                       ₱{(item.price * item.quantity).toFixed(2)}
                                     </div>
                                   </div>
                                   
-                                  {isReviewing && (
+                                  {isReviewing && !hasRatedThisProduct && (
                                     <div className="ml-[80px]">
                                       <ReviewForm 
-                                        productId={item.id} 
-                                        onSuccess={() => setReviewingItemId(null)}
+                                        productId={targetProductId || item.id} 
+                                        onSuccess={() => {
+                                          setReviewingItemId(null);
+                                          if (targetProductId) {
+                                            setRatedProductIds(prev => new Set(prev).add(targetProductId));
+                                          }
+                                        }}
                                       />
                                     </div>
                                   )}
@@ -274,65 +299,65 @@ export default function AccountPage() {
 
             {/* Profile Tab */}
             {activeTab === "profile" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 font-[family-name:var(--font-playfair)]">Profile Details</h2>
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 sm:p-8">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 font-[family-name:var(--font-playfair)]">Profile Details</h2>
                 
                 {profileMessage.text && (
-                  <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${profileMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                  <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${profileMessage.type === 'success' ? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900'}`}>
                     {profileMessage.text}
                   </div>
                 )}
 
                 <form onSubmit={handleSaveProfile} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email Address</label>
                     <input 
                       type="email" 
                       value={user?.email || ""} 
                       disabled 
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed" 
+                      className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 cursor-not-allowed" 
                     />
-                    <p className="text-xs text-gray-500 mt-1">Your email address cannot be changed here.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Your email address cannot be changed here.</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Full Name</label>
                     <input 
                       type="text" 
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white placeholder:text-gray-400 dark:placeholder:text-gray-500" 
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Phone Number</label>
                     <input 
                       type="tel" 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="e.g. 09123456789"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black" 
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white placeholder:text-gray-400 dark:placeholder:text-gray-500" 
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Default Delivery Address</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Default Delivery Address</label>
                     <textarea 
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       rows={3}
                       placeholder="Street, City, Province, Zip Code"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none" 
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500" 
                     />
                   </div>
 
-                  <div className="pt-4 border-t border-gray-100">
+                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
                     <button 
                       type="submit"
                       disabled={savingProfile}
-                      className="px-6 py-3 bg-black text-white text-sm font-bold tracking-widest uppercase rounded-sm hover:bg-gray-900 transition-colors disabled:opacity-50"
+                      className="px-6 py-3 bg-black text-white dark:bg-white dark:text-black text-sm font-bold tracking-widest uppercase rounded-sm hover:bg-gray-900 dark:hover:bg-gray-200 transition-colors disabled:opacity-50"
                     >
                       {savingProfile ? "Saving..." : "Save Changes"}
                     </button>

@@ -190,7 +190,7 @@ export default function SignupPage() {
               <button 
                 type="button"
                 onClick={() => setIsVerifying(false)}
-                className="w-full mt-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                className="w-full mt-2 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
                 Change email address
               </button>

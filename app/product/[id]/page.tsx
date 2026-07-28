@@ -128,7 +128,7 @@ export default async function ProductPage({
       <div className="bg-white dark:bg-[#0a0a0a] min-h-screen pt-10 pb-24 transition-colors">
         <div className="mx-auto max-w-[1200px] px-5 lg:px-8">
           
-          <Link href={`/category/${categorySlug}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors mb-8 font-medium">
+          <Link href={`/category/${categorySlug}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black dark:text-gray-300 dark:hover:text-white transition-colors mb-8 font-medium">
             <ChevronLeft size={16} />
             Back to {product.category}
           </Link>
@@ -190,7 +190,7 @@ export default async function ProductPage({
               {/* Removed RatingSection as per user request */}
 
               <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-200 leading-relaxed">
                   Elevate your style with this premium {product.category.toLowerCase()} piece. Designed with meticulous attention to detail and crafted from high-quality materials for ultimate comfort and durability.
                 </p>
               </div>
@@ -198,11 +198,11 @@ export default async function ProductPage({
               <div className="mt-12 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-8">
                 <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-800/50">
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Delivery</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">2-4 Business Days</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-300">2-4 Business Days</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-800/50">
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Returns</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Free within 30 days</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-300">Free within 30 days</span>
                 </div>
               </div>
 

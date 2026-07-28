@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function submitRating(productId: string, ratingValue: number, reviewText?: string) {
+export async function submitRating(productId: string, ratingValue: number, reviewText?: string, photoDataUrl?: string) {
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -21,16 +21,6 @@ export async function submitRating(productId: string, ratingValue: number, revie
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const payload: any = { 
-    product_id: productId, 
-    user_id: userId, 
-    rating: ratingValue 
-  };
-  
-  if (reviewText !== undefined) {
-    payload.review_text = reviewText;
-  }
-
   // Check if rating already exists
   const { data: existingRating } = await supabaseAdmin
     .from("product_ratings")
@@ -39,26 +29,70 @@ export async function submitRating(productId: string, ratingValue: number, revie
     .eq("user_id", userId)
     .single();
 
-  let error;
-
   if (existingRating) {
-    // Update existing rating
-    const { error: updateError } = await supabaseAdmin
-      .from("product_ratings")
-      .update({ rating: ratingValue, review_text: reviewText })
-      .eq("id", existingRating.id);
-    error = updateError;
-  } else {
-    // Insert new rating
-    const { error: insertError } = await supabaseAdmin
-      .from("product_ratings")
-      .insert(payload);
-    error = insertError;
+    return { success: false, error: "You have already rated this product." };
   }
 
-  if (error) {
-    console.error("Error submitting rating:", error);
-    return { success: false, error: "Failed to submit rating: " + error.message };
+  let photoUrl = null;
+  if (photoDataUrl && photoDataUrl.startsWith("data:image/")) {
+    try {
+      const matches = photoDataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        const contentType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const ext = contentType.split('/')[1] || 'jpg';
+        const fileName = `reviews/${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+        
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from('products')
+          .upload(fileName, buffer, { contentType, upsert: false });
+          
+        if (!uploadError) {
+          const { data: publicUrlData } = supabaseAdmin.storage.from('products').getPublicUrl(fileName);
+          photoUrl = publicUrlData.publicUrl;
+        } else {
+          console.warn("Storage upload failed, falling back to Data URL:", uploadError.message);
+          photoUrl = photoDataUrl;
+        }
+      } else {
+        photoUrl = photoDataUrl;
+      }
+    } catch (err) {
+      console.warn("Error processing image buffer:", err);
+      photoUrl = photoDataUrl;
+    }
+  } else if (photoDataUrl) {
+    photoUrl = photoDataUrl;
+  }
+
+  const payload: any = { 
+    product_id: productId, 
+    user_id: userId, 
+    rating: ratingValue 
+  };
+  
+  if (reviewText !== undefined && reviewText.trim() !== "") {
+    payload.review_text = reviewText;
+  }
+  if (photoUrl) {
+    payload.photo_url = photoUrl;
+  }
+
+  // Insert new rating
+  const { error: insertError } = await supabaseAdmin
+    .from("product_ratings")
+    .insert(payload);
+
+  if (insertError) {
+    console.error("Error submitting rating:", insertError);
+    if (insertError.message && insertError.message.includes("photo_url")) {
+      return { 
+        success: false, 
+        error: 'Failed to save photo: Please add a text column named "photo_url" to the "product_ratings" table in your Supabase database.' 
+      };
+    }
+    return { success: false, error: "Failed to submit rating: " + insertError.message };
   }
 
   revalidatePath(`/product/${productId}`);
