@@ -7,7 +7,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useCart } from "@/context/CartContext";
-import CartSidebar from "./CartSidebar";
 import ThemeToggle from "./ThemeToggle";
 
 const navLinks = [
@@ -248,7 +247,6 @@ export default function Navbar() {
         </nav>
       </div>
       </header>
-      <CartSidebar />
     </>
   );
 }

@@ -36,12 +36,13 @@ export async function GET(request: Request) {
     
     if (!error && data.user) {
       const adminEmail = process.env.ADMIN_EMAIL
+      const type = searchParams.get('type')
       
-      // Automatic role-based redirect
-      let redirectPath = next || '/' // Default to homepage
+      // Automatic role-based and action-based redirect
+      let redirectPath = next || (type === 'signup' ? '/confirmed' : '/')
       
-      if (data.user.email === adminEmail) {
-        redirectPath = '/admin' // Force admins to admin dashboard
+      if (data.user.email === adminEmail && type !== 'signup' && !next) {
+        redirectPath = '/admin' // Force admins to admin dashboard on normal login
       }
 
       return NextResponse.redirect(`${origin}${redirectPath}`)

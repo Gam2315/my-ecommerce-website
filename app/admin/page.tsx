@@ -85,30 +85,40 @@ export default function AdminDashboard() {
         }));
         setRecentOrders(recent);
 
-        // Very basic sales data mock based on day of week of orders
+        // Sales data filtered to current week only (Mon-Sun)
+        const now = new Date();
+        const currentDay = now.getDay(); // 0=Sun, 1=Mon, ...
+        const diffToMonday = currentDay === 0 ? 6 : currentDay - 1;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
         const newSalesData = [
-          { name: 'Sun', sales: 0 },
           { name: 'Mon', sales: 0 },
           { name: 'Tue', sales: 0 },
           { name: 'Wed', sales: 0 },
           { name: 'Thu', sales: 0 },
           { name: 'Fri', sales: 0 },
           { name: 'Sat', sales: 0 },
+          { name: 'Sun', sales: 0 },
         ];
         
-        orders.filter(o => o.status !== 'Cancelled').forEach(o => {
-          const date = new Date(o.created_at);
-          const day = date.getDay(); // 0 is Sunday
-          newSalesData[day].sales += Number(o.total_amount);
-        });
-        
-        // Reorder array to start from Mon (1) to Sun (0)
-        const orderedSalesData = [
-          ...newSalesData.slice(1),
-          newSalesData[0]
-        ];
+        orders
+          .filter(o => o.status !== 'Cancelled')
+          .forEach(o => {
+            const date = new Date(o.created_at);
+            if (date >= monday && date <= sunday) {
+              const day = date.getDay(); // 0=Sun, 1=Mon, ...
+              // Map: Mon=0, Tue=1, ..., Sun=6
+              const idx = day === 0 ? 6 : day - 1;
+              newSalesData[idx].sales += Number(o.total_amount);
+            }
+          });
 
-        setSalesData(orderedSalesData);
+        setSalesData(newSalesData);
       }
       
       setLoading(false);

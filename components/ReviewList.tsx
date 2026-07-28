@@ -1,5 +1,5 @@
 import React from "react";
-import { Star } from "lucide-react";
+import { Star, BadgeCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Review {
@@ -7,6 +7,7 @@ interface Review {
   review_text?: string;
   created_at?: string;
   user_id: string;
+  user_name?: string;
 }
 
 interface ReviewListProps {
@@ -35,28 +36,18 @@ export default function ReviewList({ reviews }: ReviewListProps) {
         Customer Reviews
       </h3>
       <div className="space-y-6">
-        {reviewsWithText.map((review, index) => (
-          <div key={index} className="border-b border-gray-50 dark:border-gray-800/50 pb-6 last:border-0 last:pb-0">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-                  {/* Mock avatar initial */}
-                  V
-                </div>
-                <div>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 block">Verified Customer</span>
-                  {review.created_at && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex">
+        {reviewsWithText.map((review, index) => {
+          const displayName = review.user_name || "Anonymous";
+          const initial = displayName.charAt(0).toUpperCase();
+
+          return (
+            <div key={index} className="border-b border-gray-50 dark:border-gray-800/50 pb-6 last:border-0 last:pb-0">
+              {/* Star rating row */}
+              <div className="flex mb-3">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    size={14}
+                    size={18}
                     className={
                       star <= review.rating
                         ? "fill-yellow-400 text-yellow-400"
@@ -65,12 +56,37 @@ export default function ReviewList({ reviews }: ReviewListProps) {
                   />
                 ))}
               </div>
+
+              {/* User info row */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                  {initial}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      {displayName}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                      <BadgeCheck size={12} className="text-green-500" />
+                      Verified
+                    </span>
+                  </div>
+                  {review.created_at && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Review text */}
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {review.review_text}
+              </p>
             </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">
-              {review.review_text}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

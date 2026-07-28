@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import AddToCartSection from "@/components/AddToCartSection";
 import RatingSection from "@/components/RatingSection";
+import ReviewList from "@/components/ReviewList";
 import { ChevronLeft } from "lucide-react";
 
 export default async function ProductPage({
@@ -49,6 +50,7 @@ export default async function ProductPage({
   let totalReviews = 0;
   let initialAverage = 0;
   let userRating = null;
+  let enrichedRatings: any[] = [];
 
   if (ratingsData && !ratingsError) {
     totalReviews = ratingsData.length;
@@ -60,6 +62,24 @@ export default async function ProductPage({
       if (userRatingData) {
         userRating = userRatingData.rating;
       }
+    }
+
+    // Enrich ratings with user names from Supabase auth
+    if (ratingsData.length > 0) {
+      const { createClient: createAdmin } = require('@supabase/supabase-js');
+      const adminSupabase = createAdmin(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: { users } } = await adminSupabase.auth.admin.listUsers();
+
+      enrichedRatings = ratingsData.map((rating: any) => {
+        const user = users?.find((u: any) => u.id === rating.user_id);
+        return {
+          ...rating,
+          user_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Anonymous",
+        };
+      });
     }
   }
 
@@ -185,6 +205,9 @@ export default async function ProductPage({
                   <span className="text-sm text-gray-500 dark:text-gray-400">Free within 30 days</span>
                 </div>
               </div>
+
+              {/* Customer Reviews */}
+              <ReviewList reviews={enrichedRatings} />
             </div>
           </div>
         </div>

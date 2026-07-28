@@ -33,6 +33,9 @@ export default function SignupPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/confirmed`,
+      },
     });
 
     if (error) {
@@ -69,7 +72,7 @@ export default function SignupPage() {
     }
 
     toast.success("Email verified successfully! You are now logged in.");
-    window.location.href = "/";
+    window.location.href = "/confirmed";
   };
 
   return (
