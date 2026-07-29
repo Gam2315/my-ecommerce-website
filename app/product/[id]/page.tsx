@@ -77,16 +77,25 @@ export default async function ProductPage({
 
     // Enrich ratings with user names using shared admin client
     if (ratingsData.length > 0) {
-      const adminSupabase = getAdminClient();
-      const { data: { users } } = await adminSupabase.auth.admin.listUsers();
+      try {
+        const adminSupabase = getAdminClient();
+        const { data } = await adminSupabase.auth.admin.listUsers();
+        const users = data?.users || [];
 
-      enrichedRatings = ratingsData.map((rating: any) => {
-        const user = users?.find((u: any) => u.id === rating.user_id);
-        return {
+        enrichedRatings = ratingsData.map((rating: any) => {
+          const user = users.find((u: any) => u.id === rating.user_id);
+          return {
+            ...rating,
+            user_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Anonymous",
+          };
+        });
+      } catch (err) {
+        // Fallback if admin client fails or service key is missing
+        enrichedRatings = ratingsData.map((rating: any) => ({
           ...rating,
-          user_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Anonymous",
-        };
-      });
+          user_name: "Anonymous",
+        }));
+      }
     }
   }
 
@@ -130,7 +139,7 @@ export default async function ProductPage({
           
           <Link href={`/category/${categorySlug}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black dark:text-gray-300 dark:hover:text-white transition-colors mb-8 font-medium">
             <ChevronLeft size={16} />
-            Back to {product.category}
+            Back to {product.category || 'Category'}
           </Link>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
@@ -191,7 +200,7 @@ export default async function ProductPage({
 
               <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
                 <p className="text-gray-600 dark:text-gray-200 leading-relaxed">
-                  Elevate your style with this premium {product.category.toLowerCase()} piece. Designed with meticulous attention to detail and crafted from high-quality materials for ultimate comfort and durability.
+                  Elevate your style with this premium {product.category?.toLowerCase() || 'clothing'} piece. Designed with meticulous attention to detail and crafted from high-quality materials for ultimate comfort and durability.
                 </p>
               </div>
 
