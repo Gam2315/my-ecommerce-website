@@ -3,50 +3,29 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-// ISR: Revalidate every 60 seconds instead of on every request
-export const revalidate = 60;
-
-export default async function CategoryPage({
-  params,
+export default async function SearchPage({
+  searchParams,
 }: {
-  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const { slug } = await params;
+  const { q } = await searchParams;
+  const query = q || "";
   
-  const slugToCategory: Record<string, string> = {
-    women: "Women's Clothing",
-    men: "Men's Clothing",
-    kids: "Kids' Clothing",
-    shoes: "Shoes",
-    accessories: "Accessories",
-    perfumes: "Perfume",
-  };
-
-  const categoryName = slugToCategory[slug.toLowerCase()];
-
-  if (!categoryName) {
-    return (
-      <>
-        <Navbar />
-        <div className="flex h-[70vh] items-center justify-center flex-col gap-4 bg-white dark:bg-[#0a0a0a] transition-colors">
-          <h1 className="text-3xl font-[family-name:var(--font-playfair)] font-bold text-gray-900 dark:text-white">Category Not Found</h1>
-          <p className="text-gray-500 dark:text-gray-400">We couldn't find the category you're looking for.</p>
-          <Link href="/" className="mt-4 px-6 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold tracking-widest uppercase hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
-            Return Home
-          </Link>
-        </div>
-      </>
-    );
-  }
-
   const supabase = await createClient();
   
-  // Fetch Products
-  const { data: products, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("category", categoryName)
-    .order("id", { ascending: false });
+  let products = [];
+  let error = null;
+
+  if (query) {
+    const result = await supabase
+      .from("products")
+      .select("*")
+      .ilike("name", `%${query}%`)
+      .order("id", { ascending: false });
+    
+    products = result.data || [];
+    error = result.error;
+  }
 
   // Fetch Active Discounts
   const { data: activeDiscounts } = await supabase
@@ -90,29 +69,31 @@ export default async function CategoryPage({
         <div className="mx-auto max-w-[1340px] px-5 lg:px-8">
           <div className="mb-14 text-center">
             <h1 className="text-[2.8rem] leading-[1.15] tracking-tight text-black dark:text-white font-[family-name:var(--font-playfair)] font-bold">
-              {slug.charAt(0).toUpperCase() + slug.slice(1)}
+              Search Results
             </h1>
             <p className="text-gray-400 dark:text-gray-500 mt-3 text-[15px] max-w-lg mx-auto">
-              Explore our latest collection of {categoryName.toLowerCase()} curated just for you.
+              {query ? `Showing results for "${query}"` : "Enter a search term to find products."}
             </p>
           </div>
 
           {error && (
             <div className="p-4 bg-red-50 text-red-600 rounded-lg text-center font-medium">
-              Failed to load products: {error.message}
+              Failed to search products: {error.message}
             </div>
           )}
 
-          {!error && (!products || products.length === 0) ? (
+          {!error && query && (!products || products.length === 0) ? (
             <div className="py-24 text-center border-t border-gray-100 dark:border-gray-800">
-              <p className="text-gray-400 dark:text-gray-500 font-medium text-lg">No products available in this category yet.</p>
+              <p className="text-gray-400 dark:text-gray-500 font-medium text-lg">No products found matching your search.</p>
               <Link href="/" className="inline-block mt-6 px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-xs font-bold tracking-widest uppercase hover:bg-[#e6193c] transition-colors rounded-sm">
-                Continue Shopping
+                Return Home
               </Link>
             </div>
-          ) : (
+          ) : null}
+
+          {products && products.length > 0 && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {products?.map((product: any) => {
+              {products.map((product: any) => {
                 const discountData = getDiscountData(product);
 
                 return (

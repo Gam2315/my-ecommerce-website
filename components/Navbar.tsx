@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, User, ShoppingBag, Menu, X, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,11 +21,31 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
   const { itemCount, setIsCartOpen, isCartOpen } = useCart();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isSearchOpen &&
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSearchOpen]);
 
   useEffect(() => {
     // onAuthStateChange fires immediately with the current session,
@@ -52,6 +72,15 @@ export default function Navbar() {
     setUser(null);
     router.push('/login');
     router.refresh();
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
   };
 
   return (
@@ -164,12 +193,29 @@ export default function Navbar() {
             )}
           </button>
 
-          <button
-            className="text-[#333] dark:text-gray-300 transition-colors hover:text-[#e6193c] dark:hover:text-[#e6193c]"
-            aria-label="Search"
-          >
-            <Search size={18} strokeWidth={1.8} />
-          </button>
+          {/* Search Bar */}
+          <div className="relative flex items-center" ref={searchContainerRef}>
+            {isSearchOpen && (
+              <form onSubmit={handleSearchSubmit} className="absolute right-full mr-2 top-1/2 -translate-y-1/2 flex items-center">
+                <input 
+                  type="text" 
+                  name="q"
+                  placeholder="Search products..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-[200px] bg-gray-100 dark:bg-gray-800 text-[#333] dark:text-gray-300 rounded-full py-1.5 px-4 text-[13px] outline-none border border-transparent focus:border-gray-300 dark:focus:border-gray-700 transition-colors"
+                  autoFocus
+                />
+              </form>
+            )}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="text-[#333] dark:text-gray-300 transition-colors hover:text-[#e6193c] dark:hover:text-[#e6193c]"
+              aria-label="Search"
+            >
+              <Search size={18} strokeWidth={1.8} />
+            </button>
+          </div>
 
           {/* Mobile menu toggle */}
           <button

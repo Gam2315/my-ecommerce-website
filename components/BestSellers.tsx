@@ -56,7 +56,7 @@ export default function BestSellers({ products }: BestSellersProps) {
             {products.map((product) => (
               <Link href={`/product/${product.id}`} key={product.id} className="group cursor-pointer">
                 {/* Card */}
-                <div className="product-card relative aspect-[3/4] w-full overflow-hidden rounded-sm">
+                <div className="product-card relative aspect-[3/4] w-full overflow-hidden rounded-sm border border-gray-200 dark:border-gray-800">
                   {/* Sale Badge */}
                   {product.discount && (
                     <div className="sale-badge">

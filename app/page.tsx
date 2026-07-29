@@ -70,10 +70,16 @@ export default async function Home() {
   // Calculate best sellers from orders data
   const salesCount: Record<number, number> = {};
   allOrders.forEach((order) => {
-    order.items?.forEach((item: any) => {
-      salesCount[item.productId] =
-        (salesCount[item.productId] || 0) + item.quantity;
-    });
+    let items = order.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
+    if (Array.isArray(items)) {
+      items.forEach((item: any) => {
+        salesCount[item.productId] =
+          (salesCount[item.productId] || 0) + item.quantity;
+      });
+    }
   });
 
   const bestSellerProducts = allProducts

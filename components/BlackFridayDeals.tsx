@@ -40,7 +40,7 @@ export default function BlackFridayDeals({ activeDiscount }: { activeDiscount?: 
                 </div>
 
                 {/* Image */}
-                <div className="relative aspect-[3/4] w-full overflow-hidden">
+                <div className="relative aspect-[3/4] w-full overflow-hidden border border-gray-200 dark:border-gray-800 rounded-sm">
                   <Image
                     src={deal.image}
                     alt={deal.alt}
