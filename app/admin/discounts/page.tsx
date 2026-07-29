@@ -139,8 +139,8 @@ export default function AdminDiscounts() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Automatic Sales</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage store-wide or specific product sales.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Automatic Sales</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage store-wide or specific product sales.</p>
         </div>
         <button 
           onClick={() => setIsAddModalOpen(true)}
@@ -151,9 +151,9 @@ export default function AdminDiscounts() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
         {/* Table Toolbar */}
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input 
@@ -161,7 +161,7 @@ export default function AdminDiscounts() {
               placeholder="Search sales..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c]"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-[#e6193c] focus:ring-1 focus:ring-[#e6193c] bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
             />
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function AdminDiscounts() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Sale Name</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Type</th>
@@ -180,46 +180,46 @@ export default function AdminDiscounts() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     Loading discounts...
                   </td>
                 </tr>
               ) : filteredDiscounts.length > 0 ? (
                 filteredDiscounts.map((discount) => (
-                  <tr key={discount.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-gray-900">{discount.name}</td>
+                  <tr key={discount.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{discount.name}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        discount.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                        discount.active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                       }`}>
                         {discount.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{discount.type}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{discount.type}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                       {discount.type === 'Percentage' ? `${discount.value}%` : `₱${discount.value}`}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                       {discount.applies_to === 'all' ? 'All Products' : `${discount.product_ids?.length || 0} Products`}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                       {discount.expiry_date ? new Date(discount.expiry_date).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={() => handleToggleStatus(discount)}
-                          className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors" 
+                          className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" 
                           title={discount.active ? "Deactivate" : "Activate"}
                         >
                           {discount.active ? <XCircle size={16} /> : <Check size={16} />}
                         </button>
                         <button 
                           onClick={() => confirmDeleteDiscount(discount.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" 
+                          className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" 
                           title="Delete"
                         >
                           <Trash2 size={16} />
@@ -230,9 +230,9 @@ export default function AdminDiscounts() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     <div className="flex flex-col items-center justify-center">
-                      <p className="text-lg font-medium text-gray-900">No active sales found</p>
+                      <p className="text-lg font-medium text-gray-900 dark:text-white">No active sales found</p>
                       <p className="text-sm mt-1">Create your first sale to get started.</p>
                       <button 
                         onClick={() => setIsAddModalOpen(true)}
@@ -253,12 +253,12 @@ export default function AdminDiscounts() {
       {/* Add Discount Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-8 relative flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
-              <h2 className="text-xl font-bold text-gray-900">Create New Sale</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md my-8 relative flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Sale</h2>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X size={20} />
               </button>
@@ -266,41 +266,41 @@ export default function AdminDiscounts() {
             
             <div className="p-6 overflow-y-auto flex-1">
               {error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-lg border border-red-100 dark:border-red-800/50">
                   {error}
                 </div>
               )}
               <form id="add-discount-form" onSubmit={handleAddDiscount} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sale Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sale Name</label>
                   <input 
                     name="name" 
                     required 
                     type="text" 
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#e6193c]"
+                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-[#e6193c] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="e.g. Summer Clearance"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Discount Type</label>
                     <select 
                       name="type" 
                       required
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#e6193c]"
+                      className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-[#e6193c] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     >
                       <option value="Percentage">Percentage (%)</option>
                       <option value="Fixed Amount">Fixed Amount (₱)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Value</label>
                     <input 
                       name="value" 
                       required 
                       type="number" 
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#e6193c]"
+                      className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-[#e6193c] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       placeholder="e.g. 20"
                     />
                   </div>
@@ -308,7 +308,7 @@ export default function AdminDiscounts() {
 
                 {/* Applies To */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Applies To</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Applies To</label>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
@@ -317,7 +317,7 @@ export default function AdminDiscounts() {
                         onChange={() => setAppliesTo("all")}
                         className="accent-[#e6193c]"
                       />
-                      <span className="text-sm">Entire Store</span>
+                      <span className="text-sm dark:text-gray-300">Entire Store</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
@@ -326,33 +326,33 @@ export default function AdminDiscounts() {
                         onChange={() => setAppliesTo("specific")}
                         className="accent-[#e6193c]"
                       />
-                      <span className="text-sm">Specific Products</span>
+                      <span className="text-sm dark:text-gray-300">Specific Products</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Product Selection List */}
                 {appliesTo === "specific" && (
-                  <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1">
                     {products.map(product => (
-                      <label key={product.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors">
+                      <label key={product.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer transition-colors">
                         <input 
                           type="checkbox"
                           checked={selectedProductIds.includes(product.id)}
                           onChange={() => toggleProductSelection(product.id)}
                           className="accent-[#e6193c]"
                         />
-                        <div className="w-8 h-8 relative rounded bg-gray-100 overflow-hidden shrink-0">
+                        <div className="w-8 h-8 relative rounded bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
                           {product.image && <Image src={product.image} alt={product.name} fill className="object-cover" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                          <p className="text-xs text-gray-500">{product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}</p>
                         </div>
                       </label>
                     ))}
                     {products.length === 0 && (
-                      <div className="p-4 text-center text-sm text-gray-500">
+                      <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
                         No products available.
                       </div>
                     )}
@@ -360,21 +360,21 @@ export default function AdminDiscounts() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry Date (Optional)</label>
                   <input 
                     name="expiry" 
                     type="date"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#e6193c]"
+                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-[#e6193c] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
               </form>
             </div>
             
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 shrink-0">
               <button 
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 disabled={submitting}
               >
                 Cancel
@@ -395,22 +395,22 @@ export default function AdminDiscounts() {
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm my-8 relative flex flex-col">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm my-8 relative flex flex-col">
             <div className="p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4">
                 <Trash2 size={24} />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Sale</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Sale</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Are you sure you want to delete this sale? This action cannot be undone.
               </p>
             </div>
             
-            <div className="p-6 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3 bg-gray-50 rounded-b-xl">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-end gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
               <button 
                 type="button"
                 onClick={() => { setIsDeleteModalOpen(false); setDiscountToDelete(null); }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors w-full sm:w-auto"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors w-full sm:w-auto"
               >
                 Cancel
               </button>
