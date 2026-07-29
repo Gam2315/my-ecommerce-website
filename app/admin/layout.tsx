@@ -30,7 +30,7 @@ export default function AdminLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-gray-50 font-[family-name:var(--font-inter)]">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-[#0a0a0a] font-[family-name:var(--font-inter)] text-black dark:text-white transition-colors">
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
         <div 
@@ -41,22 +41,22 @@ export default function AdminLayout({
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out flex flex-col ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0a0a0a] border-r border-gray-200 dark:border-gray-800 transform transition-transform duration-200 ease-in-out flex flex-col ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Admin Header */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-800">
           <Link href="/admin" className="flex items-center gap-2 select-none">
-            <span className="flex h-6 w-6 items-center justify-center border-2 border-black text-[10px] font-black bg-black text-white rounded-sm">
+            <span className="flex h-6 w-6 items-center justify-center border-2 border-black dark:border-white text-[10px] font-black bg-black dark:bg-white text-white dark:text-black rounded-sm">
               X
             </span>
-            <span className="text-[14px] font-bold tracking-wide text-black">
+            <span className="text-[14px] font-bold tracking-wide text-black dark:text-white">
               ADMIN
             </span>
           </Link>
           <button 
-            className="lg:hidden text-gray-500 hover:text-black"
+            className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
             onClick={() => setMobileSidebarOpen(false)}
           >
             <X size={20} />
@@ -76,7 +76,7 @@ export default function AdminLayout({
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive 
                     ? "bg-[#e6193c]/10 text-[#e6193c]" 
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 <Icon size={18} />
@@ -87,10 +87,10 @@ export default function AdminLayout({
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-gray-200 space-y-2">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
           <Link 
             href="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft size={18} />
             Back to Store
@@ -102,7 +102,7 @@ export default function AdminLayout({
               await supabase.auth.signOut();
               window.location.href = '/login';
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <LogOut size={18} />
             Sign Out
@@ -113,14 +113,14 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center px-4 shrink-0">
+        <header className="lg:hidden h-16 bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-gray-800 flex items-center px-4 shrink-0 transition-colors">
           <button 
-            className="text-gray-500 hover:text-black p-2 -ml-2"
+            className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white p-2 -ml-2"
             onClick={() => setMobileSidebarOpen(true)}
           >
             <Menu size={24} />
           </button>
-          <span className="font-bold ml-2">XtraFashion Admin</span>
+          <span className="font-bold ml-2 text-black dark:text-white">XtraFashion Admin</span>
         </header>
 
         {/* Page Content */}

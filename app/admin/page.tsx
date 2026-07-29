@@ -139,8 +139,8 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">Welcome back, Admin. Here's what's happening today.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome back, Admin. Here's what's happening today.</p>
         </div>
       </div>
 
@@ -149,18 +149,18 @@ export default function AdminDashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.title} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+            <div key={stat.title} className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stat.value}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">
-                  <Icon size={20} className="text-gray-700" />
+                <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                  <Icon size={20} className="text-gray-700 dark:text-gray-300" />
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm">
-                <span className={`flex items-center font-medium ${stat.positive ? 'text-green-600' : 'text-gray-600'}`}>
+                <span className={`flex items-center font-medium ${stat.positive ? 'text-green-600 dark:text-green-500' : 'text-gray-600 dark:text-gray-400'}`}>
                   {stat.trend}
                 </span>
               </div>
@@ -171,8 +171,8 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Sales Revenue (This Week)</h2>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Sales Revenue (This Week)</h2>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={salesData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -189,9 +189,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h2>
           </div>
           
           <div className="space-y-5">
@@ -199,20 +199,20 @@ export default function AdminDashboard() {
               recentOrders.map((order) => (
                 <div key={order.id} className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{order.customer}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{order.customer}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500">#{order.id}</span>
-                      <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs text-gray-500">{order.date}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">#{order.id}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{order.date}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{order.amount}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{order.amount}</p>
                     <p className={`text-xs font-medium mt-1 ${
-                      order.status === 'Delivered' ? 'text-green-600' : 
-                      order.status === 'Cancelled' ? 'text-red-600' :
-                      order.status === 'Shipped' ? 'text-purple-600' :
-                      order.status === 'Processing' ? 'text-blue-600' : 'text-orange-600'
+                      order.status === 'Delivered' ? 'text-green-600 dark:text-green-500' : 
+                      order.status === 'Cancelled' ? 'text-red-600 dark:text-red-500' :
+                      order.status === 'Shipped' ? 'text-purple-600 dark:text-purple-500' :
+                      order.status === 'Processing' ? 'text-blue-600 dark:text-blue-500' : 'text-orange-600 dark:text-orange-500'
                     }`}>
                       {order.status}
                     </p>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
                 <p className="text-sm">No recent orders.</p>
               </div>
             )}

@@ -1,20 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Template({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [showLoader, setShowLoader] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
-  const hasLoadedOnce = useRef(false);
+  const prevPathRef = useRef(pathname);
 
   useEffect(() => {
-    // Only show the loading overlay on the very first page load
-    if (hasLoadedOnce.current) {
-      setShowLoader(false);
-      return;
+    // On route change, show loader then fade it out
+    if (prevPathRef.current !== pathname) {
+      setShowLoader(true);
+      setFadeOut(false);
     }
-
-    hasLoadedOnce.current = true;
+    prevPathRef.current = pathname;
 
     // Start the fade-out animation after a brief moment
     const fadeTimer = setTimeout(() => {
@@ -30,7 +31,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
-  }, []);
+  }, [pathname]);
 
   return (
     <>
@@ -51,7 +52,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-      <div className="animate-page-enter">
+      <div key={pathname} className="animate-page-enter">
         {children}
       </div>
     </>
