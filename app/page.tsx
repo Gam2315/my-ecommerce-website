@@ -29,7 +29,7 @@ export default async function Home() {
       .order("created_at", { ascending: false }),
     supabase
       .from("products")
-      .select("id, name, price, image, category, discount, hasSaleBanner, status"),
+      .select("*"),
     supabase
       .from("orders")
       .select("items")
@@ -44,6 +44,9 @@ export default async function Home() {
   const allRatings = ratingsResult.data || [];
   const allProducts = productsResult.data || [];
   const allOrders = ordersResult.data || [];
+
+  if (productsResult.error) console.error("Products fetch error:", productsResult.error);
+  if (ordersResult.error) console.error("Orders fetch error:", ordersResult.error);
 
   // Enrich ratings with user names (only if there are ratings)
   let enrichedRatings = allRatings;
