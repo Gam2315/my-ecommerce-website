@@ -16,7 +16,8 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   const [hoveredStar, setHoveredStar] = useState<number>(0);
   const [rating, setRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState("");
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [hasRated, setHasRated] = useState<boolean>(false);
   const [checkingRated, setCheckingRated] = useState<boolean>(true);
@@ -43,6 +44,15 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     checkExistingRating();
   }, [productId, supabase]);
 
+  // Cleanup object URL on unmount or when photo changes
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -59,11 +69,21 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhotoDataUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Revoke previous preview URL if any
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    setPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const clearPhoto = () => {
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+    setPhotoFile(null);
+    setPhotoPreviewUrl(null);
   };
 
   const handleSubmit = () => {
@@ -77,12 +97,39 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
     }
 
     startTransition(async () => {
-      const result = await submitRating(productId, rating, reviewText, photoDataUrl || undefined);
+      let uploadedPhotoUrl: string | undefined = undefined;
+
+      // Upload photo via API route if a file was selected
+      if (photoFile) {
+        try {
+          const formData = new FormData();
+          formData.append("photo", photoFile);
+
+          const uploadRes = await fetch("/api/upload-review-photo", {
+            method: "POST",
+            body: formData,
+          });
+
+          const uploadData = await uploadRes.json();
+
+          if (!uploadRes.ok) {
+            toast.error(uploadData.error || "Failed to upload photo.");
+            return;
+          }
+
+          uploadedPhotoUrl = uploadData.url;
+        } catch {
+          toast.error("Failed to upload photo. Please try again.");
+          return;
+        }
+      }
+
+      const result = await submitRating(productId, rating, reviewText, uploadedPhotoUrl);
       if (result.success) {
         toast.success("Thank you for your review!");
         setRating(0);
         setReviewText("");
-        setPhotoDataUrl(null);
+        clearPhoto();
         setHasRated(true);
         if (onSuccess) onSuccess();
       } else {
@@ -151,12 +198,13 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
           Add Photo (Max 5MB, Optional)
         </label>
         
-        {photoDataUrl ? (
+        {photoPreviewUrl ? (
           <div className="relative inline-block w-20 h-20 rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 group">
-            <Image src={photoDataUrl} alt="Review upload preview" fill className="object-cover" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoPreviewUrl} alt="Review upload preview" className="w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => setPhotoDataUrl(null)}
+              onClick={clearPhoto}
               disabled={isPending}
               className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white p-1 rounded-full transition-colors"
               title="Remove photo"

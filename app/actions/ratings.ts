@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 
-export async function submitRating(productId: string, ratingValue: number, reviewText?: string, photoDataUrl?: string) {
+export async function submitRating(productId: string, ratingValue: number, reviewText?: string, photoUrl?: string) {
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -28,39 +28,6 @@ export async function submitRating(productId: string, ratingValue: number, revie
 
   if (existingRating) {
     return { success: false, error: "You have already rated this product." };
-  }
-
-  let photoUrl = null;
-  if (photoDataUrl && photoDataUrl.startsWith("data:image/")) {
-    try {
-      const matches = photoDataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        const contentType = matches[1];
-        const base64Data = matches[2];
-        const buffer = Buffer.from(base64Data, 'base64');
-        const ext = contentType.split('/')[1] || 'jpg';
-        const fileName = `reviews/${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
-        
-        const { error: uploadError } = await supabaseAdmin.storage
-          .from('products')
-          .upload(fileName, buffer, { contentType, upsert: false });
-          
-        if (!uploadError) {
-          const { data: publicUrlData } = supabaseAdmin.storage.from('products').getPublicUrl(fileName);
-          photoUrl = publicUrlData.publicUrl;
-        } else {
-          console.warn("Storage upload failed, falling back to Data URL:", uploadError.message);
-          photoUrl = photoDataUrl;
-        }
-      } else {
-        photoUrl = photoDataUrl;
-      }
-    } catch (err) {
-      console.warn("Error processing image buffer:", err);
-      photoUrl = photoDataUrl;
-    }
-  } else if (photoDataUrl) {
-    photoUrl = photoDataUrl;
   }
 
   const payload: any = { 
@@ -96,3 +63,4 @@ export async function submitRating(productId: string, ratingValue: number, revie
   revalidatePath(`/`);
   return { success: true };
 }
+
