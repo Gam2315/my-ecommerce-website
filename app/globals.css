@@ -28,6 +28,7 @@
     margin: 0;
     padding: 0;
   }
+
   body {
     background: var(--background);
     color: var(--foreground);
@@ -46,12 +47,14 @@
   border: 1.5px solid #e0e0e0;
   border-radius: 6px;
 }
+
 .countdown-box .number {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
   color: #111;
 }
+
 .countdown-box .label {
   font-size: 0.65rem;
   color: #999;
@@ -63,18 +66,26 @@
 .dark .countdown-box {
   border-color: #444;
 }
+
 .dark .countdown-box .number {
   color: #ffffff;
 }
+
 .dark .countdown-box .label {
   color: #aaaaaa;
 }
 
 /* ── Marquee / scrolling text ── */
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
 .marquee-track {
   display: flex;
   animation: marquee 18s linear infinite;
@@ -83,9 +94,15 @@
 
 /* ── Sale ticker at bottom of product cards ── */
 @keyframes saleTicker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
 .sale-ticker-track {
   display: flex;
   animation: saleTicker 8s linear infinite;
@@ -102,6 +119,7 @@
   height: 480px;
   z-index: 0;
 }
+
 .hero-shape::before {
   content: "";
   position: absolute;
@@ -126,6 +144,7 @@
   padding: 8px 6px;
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.06);
 }
+
 .floating-sidebar button {
   width: 36px;
   height: 36px;
@@ -139,6 +158,7 @@
   border-radius: 6px;
   transition: all 0.2s;
 }
+
 .floating-sidebar button:hover {
   background: #f5f5f5;
   color: #e6193c;
@@ -163,6 +183,7 @@
   border: none;
   color: #111;
 }
+
 .chat-bubble:hover {
   transform: scale(1.08);
 }
@@ -185,6 +206,7 @@
   transition: all 0.2s;
   color: #111;
 }
+
 .scroll-top:hover {
   border-color: #e6193c;
   color: #e6193c;
@@ -200,6 +222,7 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .sale-badge span {
   display: inline-block;
   background: #e6193c;
@@ -217,32 +240,37 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
 .collection-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
+
 .collection-card:hover img {
   transform: scale(1.05);
 }
+
 .collection-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 28px 24px;
-  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
 }
+
 .collection-overlay h3 {
   font-size: 1.6rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: 2px;
 }
+
 .collection-overlay p {
   font-size: 0.85rem;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   margin-top: 2px;
 }
 
@@ -255,15 +283,18 @@
   cursor: pointer;
   transition: box-shadow 0.3s;
 }
+
 .product-card:hover {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
+
 .product-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
+
 .product-card:hover img {
   transform: scale(1.03);
 }
@@ -281,6 +312,7 @@
   text-align: center;
   line-height: 1;
 }
+
 .dark .watermark-text {
   color: rgba(255, 255, 255, 0.04);
 }
@@ -301,6 +333,7 @@
     opacity: 0;
     transform: translateY(16px) scale(0.99);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -309,4 +342,70 @@
 
 .animate-page-enter {
   animation: page-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Loading screen overlay ── */
+.loading-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.loading-screen-fade-out {
+  animation: loadingFadeOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes loadingFadeOut {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(1.02);
+  }
+}
+
+/* ── Loading logo pop animation ── */
+.loading-logo-pop {
+  animation: logoPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes logoPop {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* ── Subtle pulse for loading logo ── */
+.loading-subtle-pulse {
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.93;
+  }
 }
