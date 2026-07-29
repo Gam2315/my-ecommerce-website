@@ -7,50 +7,79 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import BrandsSection from "@/components/BrandsSection";
 import FloatingElements from "@/components/FloatingElements";
 import { createClient } from "@/utils/supabase/server";
+import { getAdminClient } from "@/utils/supabase/admin";
+
+// ISR: Revalidate every 60 seconds instead of on every request
+export const revalidate = 60;
 
 export default async function Home() {
   const supabase = await createClient();
-  
-  const { data: activeDiscounts } = await supabase
-    .from("discounts")
-    .select("*")
-    .eq("active", true)
-    .order("created_at", { ascending: false })
-    .limit(1);
 
-  const activeDiscount = activeDiscounts && activeDiscounts.length > 0 ? activeDiscounts[0] : null;
+  // Parallelize all independent queries
+  const [discountsResult, ratingsResult, productsResult, ordersResult] = await Promise.all([
+    supabase
+      .from("discounts")
+      .select("id, name, type, value, active, expiry_date, applies_to, product_ids")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("product_ratings")
+      .select("rating, review_text, created_at, user_id, product_id")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("products")
+      .select("id, name, price, image, category, discount, hasSaleBanner, status"),
+    supabase
+      .from("orders")
+      .select("items")
+      .in("status", ["Delivered", "Completed", "Shipped", "Processing", "Pending"]),
+  ]);
 
-  const { data: allRatings } = await supabase
-    .from("product_ratings")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const activeDiscount =
+    discountsResult.data && discountsResult.data.length > 0
+      ? discountsResult.data[0]
+      : null;
 
-  let enrichedRatings = allRatings || [];
+  const allRatings = ratingsResult.data || [];
+  const allProducts = productsResult.data || [];
+  const allOrders = ordersResult.data || [];
 
-  if (allRatings && allRatings.length > 0) {
-    const { createClient: createAdmin } = require('@supabase/supabase-js');
-    const adminSupabase = createAdmin(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    
-    // Fetch users to get their names
+  // Enrich ratings with user names (only if there are ratings)
+  let enrichedRatings = allRatings;
+
+  if (allRatings.length > 0) {
+    const adminSupabase = getAdminClient();
     const { data: { users } } = await adminSupabase.auth.admin.listUsers();
-    
-    // Fetch products to get product names
-    const { data: products } = await supabase.from("products").select("id, name");
-    
-    enrichedRatings = allRatings.map(rating => {
+
+    enrichedRatings = allRatings.map((rating) => {
       const user = users.find((u: any) => u.id === rating.user_id);
-      const product = products?.find((p: any) => p.id.toString() === rating.product_id?.toString());
-      
+      const product = allProducts.find(
+        (p: any) => p.id.toString() === rating.product_id?.toString()
+      );
+
       return {
         ...rating,
-        user_name: user?.user_metadata?.full_name || "Verified Customer",
-        product_name: product?.name
+        user_name:
+          user?.user_metadata?.full_name || "Verified Customer",
+        product_name: product?.name,
       };
     });
   }
+
+  // Calculate best sellers from orders data
+  const salesCount: Record<number, number> = {};
+  allOrders.forEach((order) => {
+    order.items?.forEach((item: any) => {
+      salesCount[item.productId] =
+        (salesCount[item.productId] || 0) + item.quantity;
+    });
+  });
+
+  const bestSellerProducts = allProducts
+    .map((p) => ({ ...p, sales: salesCount[p.id] || 0 }))
+    .sort((a, b) => b.sales - a.sales)
+    .slice(0, 5);
 
   return (
     <>
@@ -58,7 +87,7 @@ export default async function Home() {
       <main>
         <HeroSection activeDiscount={activeDiscount} />
         <BlackFridayDeals activeDiscount={activeDiscount} />
-        <BestSellers />
+        <BestSellers products={bestSellerProducts} />
         <CollectionsSection />
         <TestimonialsSection reviews={enrichedRatings} />
         <BrandsSection />

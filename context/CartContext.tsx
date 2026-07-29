@@ -46,15 +46,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
 
   // Listen for auth changes to determine the storage key and current user
+  // onAuthStateChange fires immediately with the current session,
+  // so no separate getUser() call is needed.
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user || null;
-      setCurrentUser(user);
-      setCartKey(user ? `cart_${user.id}` : "cart_guest");
-    };
-    fetchUser();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user || null;
       setCurrentUser(user);

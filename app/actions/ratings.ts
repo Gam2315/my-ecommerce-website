@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 export async function submitRating(productId: string, ratingValue: number, reviewText?: string, photoDataUrl?: string) {
@@ -14,12 +15,8 @@ export async function submitRating(productId: string, ratingValue: number, revie
 
   const userId = userData.user.id;
 
-  // Create an admin client to bypass RLS for inserting the rating
-  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
-  const supabaseAdmin = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  // Use the shared admin client to bypass RLS
+  const supabaseAdmin = getAdminClient();
 
   // Check if rating already exists
   const { data: existingRating } = await supabaseAdmin

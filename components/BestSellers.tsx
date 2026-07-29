@@ -1,10 +1,6 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
 
 function SaleBanner({ discount }: { discount: string }) {
   const text = `SALE ${discount} OFF ⚡ HOT SALE ${discount} OFF ⚡ `;
@@ -24,51 +20,11 @@ function SaleBanner({ discount }: { discount: string }) {
   );
 }
 
-export default function BestSellers() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+interface BestSellersProps {
+  products: any[];
+}
 
-  useEffect(() => {
-    const fetchBestSellers = async () => {
-      // Fetch all products
-      const { data: allProducts } = await supabase.from('products').select('*');
-      
-      // Fetch completed orders
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('items')
-        .in('status', ['Delivered', 'Completed', 'Shipped', 'Processing', 'Pending']); 
-        // Including all non-cancelled orders for accurate sales volume, as requested 'complete' might just mean placed orders for now if testing, but we'll prioritize actually delivered if they exist.
-
-      if (allProducts && orders) {
-        // Calculate sales count for each product
-        const salesCount: Record<number, number> = {};
-        
-        orders.forEach(order => {
-          order.items?.forEach((item: any) => {
-            salesCount[item.productId] = (salesCount[item.productId] || 0) + item.quantity;
-          });
-        });
-
-        // Add sales count to products and sort
-        const productsWithSales = allProducts.map(p => ({
-          ...p,
-          sales: salesCount[p.id] || 0
-        }));
-
-        // Sort by sales descending
-        productsWithSales.sort((a, b) => b.sales - a.sales);
-
-        // Take top 5
-        setProducts(productsWithSales.slice(0, 5));
-      }
-      setLoading(false);
-    };
-
-    fetchBestSellers();
-  }, [supabase]);
-
+export default function BestSellers({ products }: BestSellersProps) {
   return (
     <section id="best-sellers" className="relative w-full bg-white dark:bg-[#0a0a0a] py-20 transition-colors">
       {/* Background watermark */}
@@ -95,11 +51,7 @@ export default function BestSellers() {
         </h2>
 
         {/* Product Grid */}
-        {loading ? (
-          <div className="py-16 text-center">
-            <p className="text-gray-500 font-medium">Loading best sellers...</p>
-          </div>
-        ) : products.length > 0 ? (
+        {products.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {products.map((product) => (
               <Link href={`/product/${product.id}`} key={product.id} className="group cursor-pointer">

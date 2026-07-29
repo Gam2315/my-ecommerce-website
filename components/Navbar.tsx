@@ -28,19 +28,8 @@ export default function Navbar() {
   const { itemCount, setIsCartOpen, isCartOpen } = useCart();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        setUser({
-          name: data.user.user_metadata?.full_name || data.user.email,
-          picture: data.user.user_metadata?.avatar_url,
-          given_name: data.user.user_metadata?.full_name?.split(' ')[0] || data.user.email?.split('@')[0]
-        });
-      }
-    };
-
-    fetchUser();
-
+    // onAuthStateChange fires immediately with the current session,
+    // so no separate getUser() call is needed.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({

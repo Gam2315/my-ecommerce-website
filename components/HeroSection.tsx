@@ -13,8 +13,10 @@ function useCountdown(targetDate: Date) {
       seconds: Math.floor((diff / 1000) % 60),
     };
   };
-  const [time, setTime] = useState(calc);
+  // Initialize with zeros to avoid server/client hydration mismatch
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
+    setTime(calc()); // Set correct time immediately on mount
     const id = setInterval(() => setTime(calc), 1000);
     return () => clearInterval(id);
   }, []);

@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { getAdminClient } from "@/utils/supabase/admin";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -37,15 +38,25 @@ export default async function ProductPage({
     );
   }
 
-  // Fetch ratings
-  const { data: ratingsData, error: ratingsError } = await supabase
-    .from("product_ratings")
-    .select("*")
-    .eq("product_id", id);
+  // Parallelize independent queries after product fetch
+  const [ratingsResult, userDataResult, discountsResult] = await Promise.all([
+    supabase
+      .from("product_ratings")
+      .select("*")
+      .eq("product_id", id),
+    supabase.auth.getUser(),
+    supabase
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const { data: userData } = await supabase.auth.getUser();
-  const userId = userData?.user?.id;
+  const ratingsData = ratingsResult.data;
+  const ratingsError = ratingsResult.error;
+  const userId = userDataResult.data?.user?.id;
   const isLoggedIn = !!userId;
+  const activeDiscounts = discountsResult.data;
 
   let totalReviews = 0;
   let initialAverage = 0;
@@ -64,13 +75,9 @@ export default async function ProductPage({
       }
     }
 
-    // Enrich ratings with user names from Supabase auth
+    // Enrich ratings with user names using shared admin client
     if (ratingsData.length > 0) {
-      const { createClient: createAdmin } = require('@supabase/supabase-js');
-      const adminSupabase = createAdmin(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+      const adminSupabase = getAdminClient();
       const { data: { users } } = await adminSupabase.auth.admin.listUsers();
 
       enrichedRatings = ratingsData.map((rating: any) => {
@@ -82,13 +89,6 @@ export default async function ProductPage({
       });
     }
   }
-
-  // Fetch active discounts to see if this product is on sale
-  const { data: activeDiscounts } = await supabase
-    .from("discounts")
-    .select("*")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
 
   let applicableDiscount = null;
   if (activeDiscounts && activeDiscounts.length > 0) {
