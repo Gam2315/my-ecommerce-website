@@ -59,6 +59,17 @@
   text-transform: capitalize;
 }
 
+/* ── Countdown – dark mode overrides ── */
+.dark .countdown-box {
+  border-color: #444;
+}
+.dark .countdown-box .number {
+  color: #ffffff;
+}
+.dark .countdown-box .label {
+  color: #aaaaaa;
+}
+
 /* ── Marquee / scrolling text ── */
 @keyframes marquee {
   0% { transform: translateX(0); }
