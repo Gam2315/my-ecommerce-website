@@ -49,6 +49,7 @@ export default async function ProductPage({
       .from("discounts")
       .select("*")
       .eq("active", true)
+      .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString()}`)
       .order("created_at", { ascending: false }),
   ]);
 

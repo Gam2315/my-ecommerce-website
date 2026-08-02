@@ -21,6 +21,7 @@ export default async function Home() {
       .from("discounts")
       .select("id, name, type, value, active, expiry_date, applies_to, product_ids")
       .eq("active", true)
+      .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(1),
     supabase
