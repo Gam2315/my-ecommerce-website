@@ -23,6 +23,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -66,6 +68,32 @@ export default function Navbar() {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, image, price")
+        .ilike("name", `%${searchQuery.trim()}%`)
+        .limit(5);
+
+      if (!error && data) {
+        setSearchResults(data);
+      } else {
+        setSearchResults([]);
+      }
+      setIsSearching(false);
+    };
+
+    const timeoutId = setTimeout(fetchSearchResults, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -194,27 +222,84 @@ export default function Navbar() {
           </button>
 
           {/* Search Bar */}
-          <div className="relative flex items-center" ref={searchContainerRef}>
-            {isSearchOpen && (
-              <form onSubmit={handleSearchSubmit} className="absolute right-full mr-2 top-1/2 -translate-y-1/2 flex items-center">
-                <input 
-                  type="text" 
-                  name="q"
-                  placeholder="Search products..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-[200px] bg-gray-100 dark:bg-gray-800 text-[#333] dark:text-gray-300 rounded-full py-1.5 px-4 text-[13px] outline-none border border-transparent focus:border-gray-300 dark:focus:border-gray-700 transition-colors"
-                  autoFocus
-                />
-              </form>
+          <div className="flex items-center" ref={searchContainerRef}>
+            {isSearchOpen ? (
+              <div className="absolute top-0 left-0 w-full bg-white dark:bg-[#0a0a0a] z-50 shadow-sm flex flex-col items-center border-b border-gray-100 dark:border-gray-800">
+                <div className="w-full h-16 flex items-center justify-center px-5 lg:px-8">
+                  <form onSubmit={handleSearchSubmit} className="w-full max-w-[800px] flex items-center gap-3">
+                    <Search size={20} className="text-gray-400 flex-shrink-0" />
+                    <input 
+                      type="text" 
+                      name="q"
+                      placeholder="Search for products..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent text-[#333] dark:text-white text-[15px] outline-none placeholder:text-gray-400"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsSearchOpen(false)}
+                      className="text-[#333] dark:text-gray-300 transition-colors hover:text-[#e6193c] dark:hover:text-[#e6193c] p-2 flex-shrink-0"
+                      aria-label="Close Search"
+                    >
+                      <X size={20} />
+                    </button>
+                  </form>
+                </div>
+                
+                {searchQuery.trim().length >= 2 && (
+                  <div className="w-full max-w-[800px] bg-white dark:bg-[#0a0a0a] px-5 lg:px-8 py-4 shadow-xl lg:rounded-b-lg border-x border-b border-gray-100 dark:border-gray-800 max-h-[70vh] overflow-y-auto">
+                    {isSearching ? (
+                      <div className="py-4 text-sm text-gray-500 text-center">Searching...</div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="flex flex-col gap-2">
+                        {searchResults.map((product) => (
+                          <Link 
+                            key={product.id} 
+                            href={`/product/${product.id}`}
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSearchQuery("");
+                            }}
+                            className="flex items-center gap-4 p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
+                          >
+                            <div className="w-12 h-12 relative bg-gray-100 dark:bg-gray-800 rounded-sm overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-800">
+                              {product.image ? (
+                                <Image src={product.image} alt={product.name} fill className="object-cover" sizes="48px" />
+                              ) : null}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-semibold text-black dark:text-white line-clamp-1">{product.name}</h4>
+                              <p className="text-xs font-medium text-[#e6193c] mt-0.5">{product.price?.toString().startsWith('₱') ? product.price : `₱${product.price}`}</p>
+                            </div>
+                          </Link>
+                        ))}
+                        <button 
+                          onClick={handleSearchSubmit}
+                          className="mt-2 text-sm text-center py-2.5 text-[#333] dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md transition-colors"
+                        >
+                          View all results for "{searchQuery}"
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="py-4 text-sm text-gray-500 text-center">No products found for "{searchQuery}"</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsSearchOpen(true);
+                  setMobileOpen(false);
+                }}
+                className="text-[#333] dark:text-gray-300 transition-colors hover:text-[#e6193c] dark:hover:text-[#e6193c]"
+                aria-label="Search"
+              >
+                <Search size={18} strokeWidth={1.8} />
+              </button>
             )}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-[#333] dark:text-gray-300 transition-colors hover:text-[#e6193c] dark:hover:text-[#e6193c]"
-              aria-label="Search"
-            >
-              <Search size={18} strokeWidth={1.8} />
-            </button>
           </div>
 
           {/* Mobile menu toggle */}
