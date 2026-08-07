@@ -14,8 +14,9 @@ import {
 } from "@/lib/cachedData";
 import { enrichRatingsWithUserNames } from "@/lib/userProfiles";
 
-// ISR: Revalidate every 60 seconds instead of on every request
-export const revalidate = 60;
+// Force dynamic rendering — Upstash Redis uses fetch('no-store') internally,
+// which is incompatible with ISR/static generation
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   // Parallelize all independent cached queries
