@@ -6,70 +6,30 @@ import CollectionsSection from "@/components/CollectionsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import BrandsSection from "@/components/BrandsSection";
 import FloatingElements from "@/components/FloatingElements";
-import { createClient } from "@/utils/supabase/server";
-import { getAdminClient } from "@/utils/supabase/admin";
+import {
+  getCachedProducts,
+  getCachedActiveDiscounts,
+  getCachedAllRatings,
+  getCachedOrdersForBestsellers,
+} from "@/lib/cachedData";
+import { enrichRatingsWithUserNames } from "@/lib/userProfiles";
 
 // ISR: Revalidate every 60 seconds instead of on every request
 export const revalidate = 60;
 
 export default async function Home() {
-  const supabase = await createClient();
-
-  // Parallelize all independent queries
-  const [discountsResult, ratingsResult, productsResult, ordersResult] = await Promise.all([
-    supabase
-      .from("discounts")
-      .select("id, name, type, value, active, expiry_date, applies_to, product_ids")
-      .eq("active", true)
-      .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString()}`)
-      .order("created_at", { ascending: false })
-      .limit(1),
-    supabase
-      .from("product_ratings")
-      .select("rating, review_text, created_at, user_id, product_id")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("products")
-      .select("*"),
-    supabase
-      .from("orders")
-      .select("items")
-      .in("status", ["Delivered", "Completed", "Shipped", "Processing", "Pending"]),
+  // Parallelize all independent cached queries
+  const [allDiscounts, allRatings, allProducts, allOrders] = await Promise.all([
+    getCachedActiveDiscounts(),
+    getCachedAllRatings(),
+    getCachedProducts(),
+    getCachedOrdersForBestsellers(),
   ]);
 
-  const activeDiscount =
-    discountsResult.data && discountsResult.data.length > 0
-      ? discountsResult.data[0]
-      : null;
+  const activeDiscount = allDiscounts.length > 0 ? allDiscounts[0] : null;
 
-  const allRatings = ratingsResult.data || [];
-  const allProducts = productsResult.data || [];
-  const allOrders = ordersResult.data || [];
-
-  if (productsResult.error) console.error("Products fetch error:", productsResult.error);
-  if (ordersResult.error) console.error("Orders fetch error:", ordersResult.error);
-
-  // Enrich ratings with user names (only if there are ratings)
-  let enrichedRatings = allRatings;
-
-  if (allRatings.length > 0) {
-    const adminSupabase = getAdminClient();
-    const { data: { users } } = await adminSupabase.auth.admin.listUsers();
-
-    enrichedRatings = allRatings.map((rating) => {
-      const user = users.find((u: any) => u.id === rating.user_id);
-      const product = allProducts.find(
-        (p: any) => p.id.toString() === rating.product_id?.toString()
-      );
-
-      return {
-        ...rating,
-        user_name:
-          user?.user_metadata?.full_name || "Verified Customer",
-        product_name: product?.name,
-      };
-    });
-  }
+  // Enrich ratings with cached user names (no more listUsers() per render)
+  const enrichedRatings = await enrichRatingsWithUserNames(allRatings, allProducts);
 
   // Calculate best sellers from orders data
   const salesCount: Record<number, number> = {};

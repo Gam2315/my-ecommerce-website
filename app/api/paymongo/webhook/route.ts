@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { deductStock } from '@/lib/stockManager';
+import { invalidateCache, CACHE_KEYS } from '@/lib/cache';
 
 // Use the service role key for server-side operations
 const supabase = createClient(
@@ -61,31 +63,16 @@ export async function POST(request: NextRequest) {
           console.error('Failed to update order status:', updateError);
         }
 
-        // Deduct stock for each item
+        // Deduct stock atomically using the stock manager
         const items = order.items || [];
-        for (const item of items) {
-          const { data: product } = await supabase
-            .from('products')
-            .select('*')
-            .eq('id', item.productId)
-            .single();
+        const result = await deductStock(items);
 
-          if (product) {
-            if (item.size && product.sizes) {
-              // Deduct from specific size
-              const newSizes = { ...product.sizes };
-              if (typeof newSizes[item.size] === 'number') {
-                newSizes[item.size] = Math.max(0, newSizes[item.size] - item.quantity);
-              }
-              await supabase.from('products').update({ sizes: newSizes }).eq('id', product.id);
-            } else {
-              // Deduct from general stock
-              const newStock = Math.max(0, (product.stock || 0) - item.quantity);
-              const newStatus = newStock === 0 ? 'Out of Stock' : product.status;
-              await supabase.from('products').update({ stock: newStock, status: newStatus }).eq('id', product.id);
-            }
-          }
+        if (!result.success) {
+          console.warn('Some items failed stock deduction:', result.failedItems);
         }
+
+        // Invalidate products cache after stock changes
+        await invalidateCache(CACHE_KEYS.ALL_PRODUCTS);
 
         console.log(`Order ${orderId} payment confirmed, stock deducted.`);
       }
@@ -100,3 +87,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

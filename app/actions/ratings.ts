@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { invalidateCache, invalidateByPrefix, CACHE_KEYS } from "@/lib/cache";
 
 export async function submitRating(productId: string, ratingValue: number, reviewText?: string, photoUrl?: string) {
   const supabase = await createClient();
@@ -59,8 +60,15 @@ export async function submitRating(productId: string, ratingValue: number, revie
     return { success: false, error: "Failed to submit rating: " + insertError.message };
   }
 
+  // Invalidate relevant caches so fresh data is served
+  await Promise.all([
+    invalidateByPrefix('ratings:'),
+    invalidateCache(CACHE_KEYS.USER_PROFILES),
+  ]);
+
   revalidatePath(`/product/${productId}`);
   revalidatePath(`/`);
   return { success: true };
 }
+
 

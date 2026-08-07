@@ -2,6 +2,10 @@ import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import { getCachedActiveDiscounts } from "@/lib/cachedData";
+
+// ISR: Revalidate every 30 seconds
+export const revalidate = 30;
 
 export default async function SearchPage({
   searchParams,
@@ -27,13 +31,8 @@ export default async function SearchPage({
     error = result.error;
   }
 
-  // Fetch Active Discounts
-  const { data: activeDiscounts } = await supabase
-    .from("discounts")
-    .select("*")
-    .eq("active", true)
-    .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString()}`)
-    .order("created_at", { ascending: false });
+  // Fetch Active Discounts (Redis-cached, TTL: 60s)
+  const activeDiscounts = await getCachedActiveDiscounts();
 
   // Helper to calculate discount
   const getDiscountData = (product: any) => {

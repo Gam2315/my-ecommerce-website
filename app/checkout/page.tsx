@@ -114,23 +114,20 @@ export default function CheckoutPage() {
     const orderId = data[0].id;
 
     if (isCOD) {
-      // COD: deduct stock immediately and go to success
-      for (const item of checkoutItems) {
-        const { data: product } = await supabase.from('products').select('*').eq('id', item.productId).single();
-        
-        if (product) {
-          if (item.size && product.sizes) {
-            const newSizes = { ...product.sizes };
-            if (typeof newSizes[item.size] === 'number') {
-              newSizes[item.size] = Math.max(0, newSizes[item.size] - item.quantity);
-            }
-            await supabase.from('products').update({ sizes: newSizes }).eq('id', product.id);
-          } else {
-            const newStock = Math.max(0, (product.stock || 0) - item.quantity);
-            const newStatus = newStock === 0 ? "Out of Stock" : product.status;
-            await supabase.from('products').update({ stock: newStock, status: newStatus }).eq('id', product.id);
-          }
+      // COD: deduct stock atomically via server-side API
+      try {
+        const stockResponse = await fetch('/api/deduct-stock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: checkoutItems, orderId }),
+        });
+        const stockResult = await stockResponse.json();
+
+        if (!stockResponse.ok || !stockResult.success) {
+          console.warn('Stock deduction issues:', stockResult.failedItems);
         }
+      } catch (err) {
+        console.error('Stock deduction error:', err);
       }
 
       removeSelectedFromCart();

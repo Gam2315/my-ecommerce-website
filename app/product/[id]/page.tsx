@@ -1,5 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import { getAdminClient } from "@/utils/supabase/admin";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -7,6 +6,11 @@ import AddToCartSection from "@/components/AddToCartSection";
 import RatingSection from "@/components/RatingSection";
 import ReviewList from "@/components/ReviewList";
 import { ChevronLeft } from "lucide-react";
+import { getCachedActiveDiscounts, getCachedProductRatings } from "@/lib/cachedData";
+import { getUserNameMap } from "@/lib/userProfiles";
+
+// ISR: Revalidate every 60 seconds instead of on every request
+export const revalidate = 60;
 
 export default async function ProductPage({
   params,
@@ -38,37 +42,25 @@ export default async function ProductPage({
     );
   }
 
-  // Parallelize independent queries after product fetch
-  const [ratingsResult, userDataResult, discountsResult] = await Promise.all([
-    supabase
-      .from("product_ratings")
-      .select("*")
-      .eq("product_id", id),
+  // Parallelize independent cached queries after product fetch
+  const [ratingsData, userDataResult, activeDiscounts] = await Promise.all([
+    getCachedProductRatings(id),
     supabase.auth.getUser(),
-    supabase
-      .from("discounts")
-      .select("*")
-      .eq("active", true)
-      .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString()}`)
-      .order("created_at", { ascending: false }),
+    getCachedActiveDiscounts(),
   ]);
 
-  const ratingsData = ratingsResult.data;
-  const ratingsError = ratingsResult.error;
   const userId = userDataResult.data?.user?.id;
   const isLoggedIn = !!userId;
-  const activeDiscounts = discountsResult.data;
 
   let totalReviews = 0;
   let initialAverage = 0;
   let userRating = null;
   let enrichedRatings: any[] = [];
 
-  if (ratingsData && !ratingsError) {
+  if (ratingsData && ratingsData.length > 0) {
     totalReviews = ratingsData.length;
-    if (totalReviews > 0) {
-      initialAverage = ratingsData.reduce((acc, curr) => acc + curr.rating, 0) / totalReviews;
-    }
+    initialAverage = ratingsData.reduce((acc, curr) => acc + curr.rating, 0) / totalReviews;
+
     if (userId) {
       const userRatingData = ratingsData.find((r) => r.user_id === userId);
       if (userRatingData) {
@@ -76,27 +68,19 @@ export default async function ProductPage({
       }
     }
 
-    // Enrich ratings with user names using shared admin client
-    if (ratingsData.length > 0) {
-      try {
-        const adminSupabase = getAdminClient();
-        const { data } = await adminSupabase.auth.admin.listUsers();
-        const users = data?.users || [];
-
-        enrichedRatings = ratingsData.map((rating: any) => {
-          const user = users.find((u: any) => u.id === rating.user_id);
-          return {
-            ...rating,
-            user_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Anonymous",
-          };
-        });
-      } catch (err) {
-        // Fallback if admin client fails or service key is missing
-        enrichedRatings = ratingsData.map((rating: any) => ({
-          ...rating,
-          user_name: "Anonymous",
-        }));
-      }
+    // Enrich ratings with cached user names (no more listUsers() per render)
+    try {
+      const userNameMap = await getUserNameMap();
+      enrichedRatings = ratingsData.map((rating: any) => ({
+        ...rating,
+        user_name: userNameMap[rating.user_id] || rating.user_id?.substring(0, 8) || "Anonymous",
+      }));
+    } catch (err) {
+      // Fallback if cache + admin client both fail
+      enrichedRatings = ratingsData.map((rating: any) => ({
+        ...rating,
+        user_name: "Anonymous",
+      }));
     }
   }
 
@@ -225,3 +209,4 @@ export default async function ProductPage({
     </>
   );
 }
+
