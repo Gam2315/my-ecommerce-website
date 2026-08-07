@@ -341,7 +341,7 @@
 }
 
 .animate-page-enter {
-  animation: page-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* ── Loading screen overlay ── */
@@ -359,7 +359,7 @@
 }
 
 .loading-screen-fade-out {
-  animation: loadingFadeOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: loadingFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   pointer-events: none;
 }
 
